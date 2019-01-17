@@ -77,10 +77,14 @@ class ucf_people_directory_shortcode {
     public function profile(){
         $rd = ''; //return data
 
+        // #### set variables used in html output
         $person_title_prefix = get_field('person_title_prefix');
         $full_name = $person_title_prefix . ' ' . get_the_title();
         $profile_url = get_permalink();
         $image_url = get_the_post_thumbnail_url();
+        if (!$image_url){
+            $image_url = "http://local.nursing.ucf.edu/wp-content/uploads/2018/10/PEO_BR_22.jpg"; // default image location
+        }
         $job_title = get_field('person_jobtitle');
         $department = null; // get_field('person_')
         $location = get_field('person_room');
@@ -92,6 +96,8 @@ class ucf_people_directory_shortcode {
         $div_location = $this->contact_info($location, 'location');
         $div_email = $this->contact_info($email, 'email');
         $div_phone = $this->contact_info($phone, 'phone');
+
+        // ####
 
         $rd .= "
         <div class='person'>

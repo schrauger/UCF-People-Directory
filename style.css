@@ -1,4 +1,8 @@
-div.photo {
-  width: 200px; }
+div.person {
+  display: flex; }
+  div.person .photo {
+    flex: 0 0 16.66%; }
+    div.person .photo a img {
+      width: calc(100% + 1px); }
 
 /*# sourceMappingURL=style.css.map */

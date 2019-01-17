@@ -1,4 +1,13 @@
-div.photo {
-	width : 200px;
+div.person {
 
+	display : flex;
+	.photo {
+
+		flex : 0 0 16.66%;
+
+		a img {
+			width : calc(100% + 1px);
+
+		}
+	}
 }
