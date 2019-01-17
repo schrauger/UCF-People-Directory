@@ -39,10 +39,33 @@ class ucf_people_directory_shortcode {
     public function replacement( $attrs = null ){
         $replacement_data = ''; //string of html to return
 
+        // print out search bar
+        // @TODO search bar
+        // $replacement_data .=
+
+        // print out profiles
+        $replacement_data .= $this->list_profiles($attrs);
+
+        // print out pagination
+        // @TODO pagination
+        // $replacement_data .=
+
+        wp_reset_postdata();
+        return $replacement_data;
+    }
+
+    /**
+     * Return a string of HTML with all matching profiles
+     * @param $shortcode_attributes
+     *
+     * @return string
+     */
+    public function list_profiles($shortcode_attributes){
+        $html_list_profiles = '';
         $attributes = shortcode_atts(
             array(
                 'people_group' => '',
-            ), $attrs, self::shortcode );
+            ), $shortcode_attributes, self::shortcode );
 
         // only allow user to specify people_group if the editor has not explicitely defined a people_group in the shortcode
         if ($attributes['people_group']){
@@ -63,19 +86,19 @@ class ucf_people_directory_shortcode {
         if ($query->have_posts()) {
             while ($query->have_posts()) {
                 $query->the_post();
-                $replacement_data .= $this->profile();
+                $html_list_profiles .= $this->profile();
 
             }
         }
-        wp_reset_postdata();
-        return $replacement_data;
+
+        return $html_list_profiles;
     }
 
     /**
      * Call this function after the_post is set to a profile (called within a loop)
      */
     public function profile(){
-        $rd = ''; //return data
+        $html_single_profile = ''; //return data
 
         // #### set variables used in html output
         $person_title_prefix = get_field('person_title_prefix');
@@ -99,7 +122,7 @@ class ucf_people_directory_shortcode {
 
         // ####
 
-        $rd .= "
+        $html_single_profile .= "
         <div class='person'>
             <div class='photo'>
                 <a href='{$profile_url}' title='{$full_name}'>
@@ -119,7 +142,7 @@ class ucf_people_directory_shortcode {
         </div>
         ";
 
-        return $rd;
+        return $html_single_profile;
     }
 
     public function contact_info($data, $class, $title = null){
