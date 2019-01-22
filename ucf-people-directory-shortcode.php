@@ -60,12 +60,13 @@ class ucf_people_directory_shortcode {
         // print out pagination
         $replacement_data .= $this->pagination_html($wp_query);
 
+        wp_reset_postdata();
+
         // print out subcategories
         // @TODO subcategories
         $replacement_data .= $this->people_groups_html();
         // $replacement_data .=
 
-        wp_reset_postdata();
         return $replacement_data;
     }
 
