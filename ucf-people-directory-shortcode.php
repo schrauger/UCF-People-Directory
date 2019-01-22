@@ -5,6 +5,9 @@ class ucf_people_directory_shortcode {
     const posts_per_page     = '10'; // number of profiles to list per page when paginating
     const taxonomy_categories = ''; // slug for the 'categories' taxonomy
 
+    const get_param_group = 'people_group'; // group or category person is in
+    const get_param_name = 'name_search'; // restrict to profiles matching the user text
+
     public function __construct() {
         add_action( 'init', array( $this, 'add_shortcode' ) );
         add_filter( 'query_vars', array($this, 'add_query_vars_filter' )); // tell wordpress about new url parameters
@@ -26,7 +29,8 @@ class ucf_people_directory_shortcode {
      * @return array
      */
     public function add_query_vars_filter($vars){
-        $vars[] = 'people_group';
+        $vars[] = self::get_param_group;
+        $vars[] = self::get_param_name; // person name, from user submitted search text
         return $vars;
     }
 
@@ -39,53 +43,110 @@ class ucf_people_directory_shortcode {
     public function replacement( $attrs = null ){
         $replacement_data = ''; //string of html to return
 
-        // print out search bar
-        // @TODO search bar
-        // $replacement_data .=
+        // define defaults for shortcode attributes if user doesn't specify
+        $attributes = shortcode_atts(
+            array(
+                self::get_param_group => '',
+                ''
+            ), $attrs, self::shortcode );
 
+        // print out search bar
+        $replacement_data .= $this->search_bar_html();
+
+        $wp_query = $this->query_profiles($attributes);
         // print out profiles
-        $replacement_data .= $this->list_profiles($attrs);
+        $replacement_data .= $this->profiles_html($wp_query);
 
         // print out pagination
-        // @TODO pagination
+        $replacement_data .= $this->pagination_html($wp_query);
+
+        // print out subcategories
+        // @TODO subcategories
+        $replacement_data .= $this->people_groups_html();
         // $replacement_data .=
 
         wp_reset_postdata();
         return $replacement_data;
     }
 
+    // ############ Search Bar Start
+
     /**
-     * Return a string of HTML with all matching profiles
-     * @param $shortcode_attributes
-     *
+     * Return a string of HTML for the search input form
      * @return string
      */
-    public function list_profiles($shortcode_attributes){
-        $html_list_profiles = '';
-        $attributes = shortcode_atts(
-            array(
-                'people_group' => '',
-            ), $shortcode_attributes, self::shortcode );
+    public function search_bar_html(){
+        $html_search_bar = '';
+        $name_search = self::get_param_name;
+        $current_page_url = wp_get_canonical_url();
+        $html_search_bar .= "
+        <div class='searchbar'>
+            <form id='searchform' action='$current_page_url' method='get'>
+                <input 
+                    class='searchbar' 
+                    type='text' 
+                    name='{$name_search}' 
+                    placeholder='Search by Name' 
+                    onfocus='this.placeholder = \"\" '
+                    onblur='this.placeholder = \"Search by Name\"'
+                />
+                <input 
+                    class='searchsubmit'
+                    type='submit'
+                    alt='Search'
+                    value='Search'
+                    id='searchsubmit'
+                />
+            </form>
+        </div>
+        ";
+
+        return $html_search_bar;
+    }
+
+    // ############ Search Bar End
+
+    // ############ Profile Output Start
+
+    /**
+     * Return a string of HTML with all matching profiles
+     * @param $attributes
+     *
+     * @return wp_query
+     */
+    public function query_profiles($attributes){
 
         // only allow user to specify people_group if the editor has not explicitely defined a people_group in the shortcode
         if ($attributes['people_group']){
-            $people_group = $attributes['people_group'];
+            $people_group = $attributes[self::get_param_group];
         } else {
-            $people_group = get_query_var('people_group');
+            $people_group = get_query_var(self::get_param_group);
         }
 
         $paged = ( get_query_var ( 'paged' ) ) ? get_query_var ( 'paged' ) : 1; //default to page 1
+        $search_by_name = ( get_query_var ( self::get_param_name ) ) ? get_query_var ( self::get_param_name ) : ''; //don't restrict by default
         $query_args = array(
             'people_group' => $people_group,
             'paged' => $paged,
             'posts_per_page' => self::posts_per_page,
             'post_type' => 'person', // 'person' is a post type defined in ucf-people-cpt
+            's' => $search_by_name
         );
-        $query = new WP_Query( $query_args );
+        return new WP_Query( $query_args );
 
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
-                $query->the_post();
+    }
+
+    /**
+     * @param $wp_query
+     *
+     * @return string
+     */
+    public function profiles_html($wp_query){
+        $html_list_profiles = '';
+
+        if ($wp_query->have_posts()) {
+            while ($wp_query->have_posts()) {
+                $wp_query->the_post();
                 $html_list_profiles .= $this->profile();
 
             }
@@ -145,6 +206,14 @@ class ucf_people_directory_shortcode {
         return $html_single_profile;
     }
 
+    /**
+     * Output individual contact information for person, if defined
+     * @param      $data
+     * @param      $class
+     * @param null $title
+     *
+     * @return string
+     */
     public function contact_info($data, $class, $title = null){
 
         if ($data){
@@ -163,6 +232,77 @@ class ucf_people_directory_shortcode {
         }
     }
 
+    // ############ Profile Output End
+
+    // ############ Pagination Start
+
+    public function pagination_html($wp_query){
+        $html_pagination = '';
+
+        $html_pagination .= paginate_links( array(
+            'base' => str_replace( 999999999, '%#%', esc_url( get_pagenum_link( 999999999 ) ) ),
+            'total' => $wp_query->max_num_pages,
+            'current' => max( 1, get_query_var('paged')),
+            'end_size' => 2,
+            'mid_size' => 2,
+            'prev_next' => true
+
+        ));
+        return $html_pagination;
+    }
+    // ############ Pagination End
+
+    // ############ Subcategories Start
+
+    public function people_groups_html(){
+        $html_people_groups = '';
+
+
+
+        $people_group_list_html = $this->people_group_list_html();
+
+        $html_people_groups .= "
+            <div class='people_groups'>
+                <div class='title'>Filter by</div>
+                <div class='list'>
+                    <ul id='menu-directory-departments' class='menu'>
+                        {$people_group_list_html}
+                    </ul>
+                </div>
+            </div>
+        ";
+
+        return $html_people_groups;
+    }
+
+    public function people_group_list_html(){
+        $html_people_group_list = '';
+        $current_page_url = wp_get_canonical_url();
+
+        $people_groups_terms = get_terms( array(
+            'taxonomy' => 'people_group',
+            'hide_empty' => true
+        ));
+
+        foreach ($people_groups_terms as $term) {
+            /* @var $term  WP_Term */
+            $title = $term->name;
+            $slug = $term->slug;
+
+            $html_people_group_list .= "
+                <li class='menu-item'>
+                    <a 
+                        title='Display only {$title} profiles' 
+                        href='{$current_page_url}?people_group={$slug}'>
+                        {$title}
+                    </a>
+                </li>
+            ";
+        }
+
+        return $html_people_group_list;
+    }
+    // ############ Subcategories End
 
 }
 new ucf_people_directory_shortcode();

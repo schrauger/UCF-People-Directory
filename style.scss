@@ -1,13 +1,66 @@
+
+/**
+Search bar for staff directory
+**/
+
+
+/**
+Individual contact listing within staff directory
+**/
 div.person {
 
-	display : flex;
-	.photo {
+	padding : 1rem;
 
-		flex : 0 0 16.66%;
+	display : flex;
+
+	border : solid 1px #ddd;
+
+	div.photo {
+
+		flex : 0 0 25%;
 
 		a img {
 			width : calc(100% + 1px);
 
 		}
 	}
+
+	div.details {
+		flex : 0 0 75%;
+		padding : 1rem;
+
+		.full_name {
+			font-weight : bold;
+			font-size : 2rem;
+		}
+
+		.job_title {
+			font-size: 1.5rem;
+		}
+
+		.department {
+
+		}
+
+		.location {
+
+		}
+
+		.email {
+
+		}
+
+		.phone {
+
+		}
+	}
 }
+
+/**
+Pagination for staff directory
+**/
+
+
+/**
+Cagetory side menu for staff directory
+**/
