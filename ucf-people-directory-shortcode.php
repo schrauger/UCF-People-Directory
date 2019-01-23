@@ -55,15 +55,16 @@ class ucf_people_directory_shortcode {
 
         $wp_query = $this->query_profiles($attributes);
         // print out profiles
-        $replacement_data .= $this->profiles_html($wp_query);
+        $replacement_data .= "<div class='profiles-list'>";
+            $replacement_data .= $this->profiles_html($wp_query);
 
-        // print out pagination
-        $replacement_data .= $this->pagination_html($wp_query);
+            // print out pagination
+            $replacement_data .= $this->pagination_html($wp_query);
+        $replacement_data .= "</div>";
 
         wp_reset_postdata();
 
         // print out subcategories
-        // @TODO subcategories
         $replacement_data .= $this->people_groups_html();
         // $replacement_data .=
 
@@ -143,7 +144,7 @@ class ucf_people_directory_shortcode {
      * @return string
      */
     public function profiles_html($wp_query){
-        $html_list_profiles = '';
+        $html_list_profiles = "";
 
         if ($wp_query->have_posts()) {
             while ($wp_query->have_posts()) {
@@ -152,7 +153,7 @@ class ucf_people_directory_shortcode {
 
             }
         }
-
+        
         return $html_list_profiles;
     }
 
