@@ -59,15 +59,14 @@ class ucf_people_directory_shortcode {
             $replacement_data .= $this->profiles_html($wp_query);
         $replacement_data .= "</div>";
 
-        // print out pagination
-        $replacement_data .= $this->pagination_html($wp_query);
-
-
         wp_reset_postdata();
 
         // print out subcategories
         $replacement_data .= $this->people_groups_html();
         // $replacement_data .=
+
+        // print out pagination
+        $replacement_data .= $this->pagination_html($wp_query);
 
         return $replacement_data;
     }
@@ -271,7 +270,7 @@ class ucf_people_directory_shortcode {
 
         $html_people_groups .= "
             <div class='people_groups'>
-                <div class='title'>Filter by</div>
+                <h3 class='title yellow_underline'>Filter by</h3>
                 <div class='list'>
                     <ul id='menu-directory-departments' class='menu'>
                         {$people_group_list_html}

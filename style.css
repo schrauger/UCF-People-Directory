@@ -4,22 +4,58 @@ Search bar for staff directory
 /**
 Individual contact listing within staff directory
 **/
-div.person {
-  padding: 1rem;
-  display: flex;
-  border: solid 1px #ddd; }
-  div.person div.photo {
-    flex: 0 0 25%; }
-    div.person div.photo a img {
-      width: calc(100% + 1px); }
-  div.person div.details {
-    flex: 0 0 75%;
-    padding: 1rem; }
-    div.person div.details .full_name {
-      font-weight: bold;
-      font-size: 2rem; }
-    div.person div.details .job_title {
-      font-size: 1.5rem; }
+.publish {
+  overflow: auto; }
+
+.profiles-list {
+  float: left;
+  width: 70%; }
+  .profiles-list .person {
+    padding: 1rem;
+    display: flex;
+    border: solid 1px #ddd;
+    margin: 0 0 25px 0; }
+    .profiles-list .person div.photo {
+      flex: 0 0 25%; }
+      .profiles-list .person div.photo a img {
+        width: calc(100% + 1px); }
+    .profiles-list .person .details {
+      flex: 0 0 75%;
+      padding: 1rem; }
+      .profiles-list .person .details span {
+        margin: 10px 0; }
+      .profiles-list .person .details .full_name {
+        font-weight: bold;
+        font-size: 1.5rem; }
+      .profiles-list .person .details .job_title {
+        font-size: 1.2rem;
+        clear: both;
+        display: block; }
+      .profiles-list .person .details .contact div {
+        margin: 0 0 10px 0; }
+      .profiles-list .person .details .contact .label {
+        margin-right: 10px;
+        text-transform: capitalize; }
+
+.people_groups {
+  float: right;
+  width: 25%; }
+  .people_groups .list {
+    margin: 25px 0; }
+    .people_groups .list li {
+      border-bottom: solid 1px #f0f0f0;
+      padding: 10px 0;
+      list-style: none;
+      margin-left: -40px; }
+
+.pagination {
+  clear: both;
+  display: block; }
+  .pagination a, .pagination span {
+    padding: 10px;
+    display: inline-block;
+    background: #fcfcfc;
+    margin: 5px; }
 
 /**
 Pagination for staff directory
@@ -27,5 +63,3 @@ Pagination for staff directory
 /**
 Cagetory side menu for staff directory
 **/
-
-/*# sourceMappingURL=style.css.map */

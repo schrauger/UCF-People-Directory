@@ -7,52 +7,89 @@ Search bar for staff directory
 /**
 Individual contact listing within staff directory
 **/
-div.person {
 
-	padding : 1rem;
+.publish {
+	overflow: auto;
+}
 
-	display : flex;
+.profiles-list {
 
-	border : solid 1px #ddd;
+	float: left;
+	width: 70%;
 
-	div.photo {
+	.person {
+		padding : 1rem;
+		display : flex;
+		border : solid 1px #ddd;
+		margin: 0 0 25px 0;
 
-		flex : 0 0 25%;
+		div.photo {
+			flex : 0 0 25%;
 
-		a img {
-			width : calc(100% + 1px);
+			a img {
+				width : calc(100% + 1px);
+			}
+		}
 
+		.details {
+			flex : 0 0 75%;
+			padding : 1rem;
+
+			span {
+				margin: 10px 0;
+			}
+
+			.full_name {
+				font-weight : bold;
+				font-size : 1.5rem;
+			}
+
+			.job_title {
+				font-size: 1.2rem;
+				clear: both;
+				display: block;
+			}
+
+			.contact {
+				div {
+					margin: 0 0 10px 0;
+				}
+
+				.label {
+					margin-right: 10px;
+					text-transform: capitalize;
+				}
+			}
 		}
 	}
 
-	div.details {
-		flex : 0 0 75%;
-		padding : 1rem;
+}
 
-		.full_name {
-			font-weight : bold;
-			font-size : 2rem;
+.people_groups {
+	float: right;
+	width: 25%;
+
+	.list {
+		margin: 25px 0;
+
+		li {
+			border-bottom: solid 1px #f0f0f0;
+			padding: 10px 0;
+			list-style: none;
+    		margin-left: -40px;
 		}
+	}
+}
 
-		.job_title {
-			font-size: 1.5rem;
-		}
+.pagination {
+	clear: both;
+	display: block;
 
-		.department {
-
-		}
-
-		.location {
-
-		}
-
-		.email {
-
-		}
-
-		.phone {
-
-		}
+	a, span {
+		padding: 10px;
+		display: inline-block;
+		background: #fcfcfc;
+		margin: 5px;
 	}
 }
 
