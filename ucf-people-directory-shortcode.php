@@ -153,7 +153,7 @@ class ucf_people_directory_shortcode {
 
             }
         }
-        
+
         return $html_list_profiles;
     }
 
@@ -179,8 +179,8 @@ class ucf_people_directory_shortcode {
         $phone_array = get_field('person_phone_numbers');
         $phone = $phone_array[0]['number'];
 
-        $div_location = $this->contact_info($location, 'location');
-        $div_email = $this->contact_info($email, 'email');
+        $div_location = $this->contact_info($location, 'location', $location_url);
+        $div_email = $this->contact_info($email, 'email', "mailto:{$email}");
         $div_phone = $this->contact_info($phone, 'phone');
 
         // ####
@@ -210,25 +210,31 @@ class ucf_people_directory_shortcode {
 
     /**
      * Output individual contact information for person, if defined
-     * @param      $data
-     * @param      $class
-     * @param null $title
+     * @param string $data
+     * @param string $class
+     * @param string|null $url
+     * @param string|null $title
      *
      * @return string
      */
-    public function contact_info($data, $class, $title = null){
+    public function contact_info($data, $class, $url = null, $title = null){
 
         if ($data){
             if (!$title){
                 $title = strtoupper($class);
             }
 
-            return "
-            <div class='{$class}'>
-                <span class='label'>{$title}:</span>
-                <span class='data'>{$data}</span>
-            </div>
-            ";
+            $return = "<div class='{$class}'>";
+            if ($url){
+                $return .= "<a href={$url}>";
+            }
+            $return .= "<span class='label'>{$title}:</span>
+                        <span class='data'>{$data}</span>";
+            if ($url){
+                $return .= "</a>";
+            }
+            $return .= "</div>";
+            return $return;
         } else {
             return ''; // no data
         }
