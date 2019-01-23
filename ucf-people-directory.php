@@ -59,7 +59,6 @@ class ucf_people_directory {
     // run on plugin activation
     static function activation(){
         global $wp_rewrite;
-        self::custom_rewrite($wp_rewrite);
         flush_rewrite_rules();
     }
 
