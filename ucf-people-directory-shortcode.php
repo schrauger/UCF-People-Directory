@@ -243,7 +243,7 @@ class ucf_people_directory_shortcode {
     // ############ Pagination Start
 
     public function pagination_html($wp_query){
-        $html_pagination = '';
+        $html_pagination = "<div class='pagination'>";
 
         $html_pagination .= paginate_links( array(
             'base' => str_replace( 999999999, '%#%', esc_url( get_pagenum_link( 999999999 ) ) ),
@@ -254,6 +254,7 @@ class ucf_people_directory_shortcode {
             'prev_next' => true
 
         ));
+        $html_pagination .= "</div>";
         return $html_pagination;
     }
     // ############ Pagination End
