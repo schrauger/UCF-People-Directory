@@ -225,13 +225,11 @@ class ucf_people_directory_shortcode {
             }
 
             $return = "<div class='{$class}'>";
+            $return .= "<span class='label'>{$title}:</span>";
             if ($url){
-                $return .= "<a href={$url}>";
-            }
-            $return .= "<span class='label'>{$title}:</span>
-                        <span class='data'>{$data}</span>";
-            if ($url){
-                $return .= "</a>";
+                $return .= "<span class='data'><a href={$url}>{$data}</a></span>";
+            } else {
+                $return .= "<span class='data'>{$data}</span>";
             }
             $return .= "</div>";
             return $return;
