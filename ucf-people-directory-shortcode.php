@@ -57,10 +57,11 @@ class ucf_people_directory_shortcode {
         // print out profiles
         $replacement_data .= "<div class='profiles-list'>";
             $replacement_data .= $this->profiles_html($wp_query);
-
-            // print out pagination
-            $replacement_data .= $this->pagination_html($wp_query);
         $replacement_data .= "</div>";
+
+        // print out pagination
+        $replacement_data .= $this->pagination_html($wp_query);
+
 
         wp_reset_postdata();
 
