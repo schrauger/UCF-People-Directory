@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+# Upon every commit, remove the 'passed'
+# file. That way, a push to production
+# will require a push to dev for every
+# commit.
+rm -f .devpushed
+exit 0

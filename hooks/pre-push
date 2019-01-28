@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Git hook to prevent pushing to production without
+# first pushing to dev.
+
+BRANCH=$(git symbolic-ref HEAD)
+COMMAND=$(ps -ocommand -p $PPID)
+FILE=".devpushed"
+
+# When pushing to dev, create the dev file
+if [[ $COMMAND =~ .*dev.* ]]
+then
+  touch $FILE
+fi
+
+# When pushing to production, check for dev
+# file. If not exist, fail.
+if [[ $COMMAND =~ .*production.* ]]
+then
+  if ! [ -f $FILE ]; then
+    echo 1>&2 "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo 1>&2 "!                                                       !"
+    echo 1>&2 "! Push to production aborted. Please push to dev first. !"
+    echo 1>&2 "!                                                       !"
+    echo 1>&2 "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    exit 1
+  fi
+fi
+
+#if [[ $BRANCH == "refs/heads/master" ]]
+#then
+#  echo "You cannot push master!"
+#  exit 1
+#fi
+
+
+exit 0
