@@ -16,6 +16,31 @@
 		"oAP": "/.gitignore",
 		"oF": 0
 		},
+	"/default.png": {
+		"ft": 32768,
+		"iS": 5991,
+		"oA": 0,
+		"oAP": "/default.png",
+		"oF": 0,
+		"oIPL": 0,
+		"opt": 0,
+		"oT": 1,
+		"q": 100
+		},
+	"/hooks/pre-push": {
+		"cB": 0,
+		"ft": 8192,
+		"oA": 0,
+		"oAP": "/hooks/pre-push",
+		"oF": 0
+		},
+	"/hooks/prepare-commit-msg": {
+		"cB": 0,
+		"ft": 8192,
+		"oA": 0,
+		"oAP": "/hooks/prepare-commit-msg",
+		"oF": 0
+		},
 	"/README.md": {
 		"cB": 0,
 		"cS": 0,
@@ -33,6 +58,13 @@
 		"pME": 1,
 		"rFN": 0,
 		"uCM": 0
+		},
+	"/repo-setup.sh": {
+		"cB": 0,
+		"ft": 8192,
+		"oA": 0,
+		"oAP": "/repo-setup.sh",
+		"oF": 0
 		},
 	"/style.css": {
 		"aP": 1,

@@ -172,6 +172,10 @@ class ucf_people_directory_shortcode {
             $image_url = plugin_dir_url(__FILE__) . "default.png"; // default image location
         }
         $job_title = get_field('person_jobtitle');
+        if ($cv_link){
+            $cv_link = "<a href='".get_field('person_cv')."' class='button yellow'>Download CV</a>";
+        }
+        $title_suffix = get_field('person_title_suffix');
         $department = null; // get_field('person_')
         $location = get_field('person_room');
         $location_url = get_field('person_room_url'); // link to a map
@@ -188,18 +192,20 @@ class ucf_people_directory_shortcode {
         $html_single_profile .= "
         <div class='person'>
             <div class='photo'>
-                <a href='{$profile_url}' title='{$full_name}'>
-                    <img src='{$image_url}' alt='photo of {$full_name}' />
+                <a href='{$profile_url}' title='{$full_name}' style='background: url({$image_url}) no-repeat center center; background-size: cover;'>
+                    {$full_name}
                 </a>
             </div>
             <div class='details'>
                 <a href='{$profile_url}' class='full_name'>{$full_name}</a>
+                <small>{$title_suffix}</small>
                 <span class='job_title'>{$job_title}</span>
                 <span class='department'>{$department}</span>
                 <div class='contact'>
                     {$div_location}
                     {$div_email}
                     {$div_phone}
+                    {$cv_link}
                 </div>
             </div>
         </div>
