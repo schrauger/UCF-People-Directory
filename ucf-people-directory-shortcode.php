@@ -169,7 +169,7 @@ class ucf_people_directory_shortcode {
         $profile_url = get_permalink();
         $image_url = get_the_post_thumbnail_url();
         if (!$image_url){
-            $image_url = "http://local.nursing.ucf.edu/wp-content/uploads/2018/10/PEO_BR_22.jpg"; // default image location
+            $image_url = plugin_dir_url(__FILE__) . "default.png"; // default image location
         }
         $job_title = get_field('person_jobtitle');
         $department = null; // get_field('person_')
