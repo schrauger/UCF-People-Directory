@@ -61,8 +61,10 @@ class ucf_people_directory_shortcode {
 
         wp_reset_postdata();
 
-        // print out subcategories
-        $replacement_data .= $this->people_groups_html();
+        // print out subcategories unless shortcode defines a specific category
+        if (!($attributes['people_group'])) {
+            $replacement_data .= $this->people_groups_html();
+        }
         // $replacement_data .=
 
         // print out pagination
@@ -177,7 +179,7 @@ class ucf_people_directory_shortcode {
             $cv_link = "<a href='{$cv_link}' class='button yellow'>Download CV</a>";
         }
         $title_suffix = get_field('person_title_suffix');
-        $department = null; // get_field('person_')
+        $department = null; // get_field('person_') // @TODO this field may be unused on this site
         $location = get_field('person_room');
         $location_url = get_field('person_room_url'); // link to a map
         $email = get_field('person_email');
