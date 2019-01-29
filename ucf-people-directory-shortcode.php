@@ -168,12 +168,13 @@ class ucf_people_directory_shortcode {
         $full_name = $person_title_prefix . ' ' . get_the_title();
         $profile_url = get_permalink();
         $image_url = get_the_post_thumbnail_url();
+        $cv_link = get_field('person_cv');
         if (!$image_url){
             $image_url = plugin_dir_url(__FILE__) . "default.png"; // default image location
         }
         $job_title = get_field('person_jobtitle');
         if ($cv_link){
-            $cv_link = "<a href='".get_field('person_cv')."' class='button yellow'>Download CV</a>";
+            $cv_link = "<a href='{$cv_link}' class='button yellow'>Download CV</a>";
         }
         $title_suffix = get_field('person_title_suffix');
         $department = null; // get_field('person_')
