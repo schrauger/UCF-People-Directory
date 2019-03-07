@@ -361,7 +361,7 @@ class ucf_people_directory_shortcode {
                 'taxonomy'   => 'people_group',
                 'hide_empty' => true, // hide empty groups, even if specified by editor
                 'include' => $people_groups_term_ids, // only include terms specified by the editor
-                'parent' => 0 // only show top level groups - we'll get the children later for formatting
+                //'parent' => 0 // only show top level groups - we'll get the children later for formatting
             )
         );
 
