@@ -189,6 +189,8 @@ class ucf_people_directory_shortcode {
                 $html_list_profiles .= $this->profile();
 
             }
+        } else {
+            $html_list_profiles .= "<div class='no-results'>No results found.</div>";
         }
 
         return $html_list_profiles;
