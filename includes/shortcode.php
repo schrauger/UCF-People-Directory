@@ -109,6 +109,7 @@ class ucf_people_directory_shortcode {
     public function search_bar_html() {
         $html_search_bar  = '';
         $name_search      = self::get_param_name;
+        $name_search_value = get_query_var(self::get_param_name);
         $current_page_url = wp_get_canonical_url();
         $html_search_bar .= "
         <div class='searchbar'>
@@ -120,6 +121,7 @@ class ucf_people_directory_shortcode {
                     placeholder='Search by Name' 
                     onfocus='this.placeholder = \"\" '
                     onblur='this.placeholder = \"Search by Name\"'
+                    value='{$name_search_value}'
                 />
                 <input 
                     class='searchsubmit'
