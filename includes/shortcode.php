@@ -206,7 +206,7 @@ class ucf_people_directory_shortcode {
         $person_title_prefix = get_field( 'person_title_prefix' );
         $full_name           = $person_title_prefix . ' ' . get_the_title();
         $profile_url         = get_permalink();
-        $image_url           = get_the_post_thumbnail_url('post-thumbnail');
+        $image_url           = get_the_post_thumbnail_url(null, 'post-thumbnail');
         $cv_link             = get_field( 'person_cv' );
         if ( ! $image_url ) {
             $image_url = plugin_dir_url( __FILE__ ) . "default.png"; // default image location
