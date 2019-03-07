@@ -94,6 +94,13 @@ Individual contact listing within staff directory
 			padding: 10px 0;
 			list-style: none;
     		margin-left: -40px;
+
+			&.child {
+				padding-left: 20px;
+			}
+			&.active {
+				font-weight: bold;
+			}
 		}
 	}
 }

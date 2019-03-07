@@ -60,6 +60,10 @@ Individual contact listing within staff directory
       padding: 10px 0;
       list-style: none;
       margin-left: -40px; }
+      .people_groups .list li.child {
+        padding-left: 20px; }
+      .people_groups .list li.active {
+        font-weight: bold; }
 
 .pagination {
   clear: both;
@@ -69,3 +73,5 @@ Individual contact listing within staff directory
     display: inline-block;
     background: #fcfcfc;
     margin: 5px; }
+
+/*# sourceMappingURL=plugin.css.map */
