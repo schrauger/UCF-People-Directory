@@ -17,14 +17,45 @@ if ( ! defined( 'WPINC' ) ) {
 // https://www.domain.tld/directory/page/number - shows limited subset of all posts (doesn't filter by category)
 // https://www.domain.tld/directory/tag/page/number - might not work in wordpress. would show paginated, filtered results
 
-include plugin_dir_path( __FILE__ ) . 'ucf-people-directory-shortcode.php';
+include plugin_dir_path( __FILE__ ) . 'includes/common/tinymce.php';
+include plugin_dir_path( __FILE__ ) . 'includes/common/shortcode-taxonomy.php';
+include plugin_dir_path( __FILE__ ) . 'includes/acf-pro-fields.php';
+include plugin_dir_path( __FILE__ ) . 'includes/shortcode.php';
+
 
 class ucf_people_directory {
     static $directory_path = 'directory';
 
     function __construct() {
-        //add_action('init', array('ucf_people_directory', 'custom_rewrite'));
-        add_action('wp_enqueue_scripts', array('ucf_people_directory', 'add_css'));
+        // plugin css/js
+        add_action('wp_enqueue_scripts', array($this, 'add_css'));
+        add_action('wp_enqueue_scripts', array($this, 'add_js'));
+
+        // plugin activation hooks
+        register_activation_hook( __FILE__, array($this,'activation'));
+        register_deactivation_hook( __FILE__, array($this,'deactivation'));
+        register_uninstall_hook( __FILE__, array($this,'deactivation'));
+    }
+
+    function add_css(){
+        wp_enqueue_style(
+            'ucf-people-directory-theme-style',
+            plugin_dir_url(__FILE__) . '/includes/plugin.css',
+            false,
+            filemtime( plugin_dir_path(__FILE__).'/includes/plugin.css'),
+            false
+        );
+    }
+
+    function add_js(){
+
+        wp_enqueue_script(
+            'ucf-people-directory-theme-script',
+            plugin_dir_url(__FILE__) . 'includes/plugin.js',
+            false,
+            filemtime( plugin_dir_path(__FILE__).'/includes/plugin.js'),
+            false
+        );
     }
 /*
     // add rewrite rules
@@ -54,32 +85,22 @@ class ucf_people_directory {
 
     }*/
 
-   
+
 
     // run on plugin activation
-    static function activation(){
-        global $wp_rewrite;
-        flush_rewrite_rules();
+    function activation(){
+        // insert the shortcode for this plugin as a term in the taxonomy
+        ucf_people_directory_shortcode::insert_shortcode_term();
     }
 
     // run on plugin deactivation
-    static function deactivation(){
-        flush_rewrite_rules();
+    function deactivation(){
+        ucf_people_directory_shortcode::delete_shortcode_term();
     }
 
     // run on plugin complete uninstall
-    static function uninstall(){
-
-    }
-
-    static function add_css(){
-        wp_enqueue_style(
-            'ucf-people-directory-theme-style',
-            plugin_dir_url(__FILE__) . 'style.css',
-            false,
-            filemtime( plugin_dir_path(__FILE__).'/style.css'),
-            false
-        );
+    function uninstall(){
+        ucf_people_directory_shortcode::delete_shortcode_term();
     }
 
 
@@ -90,8 +111,4 @@ new ucf_people_directory();
 register_activation_hook( __FILE__, array('ucf_people_directory','activation'));
 register_deactivation_hook( __FILE__, array('ucf_people_directory','deactivation'));
 register_uninstall_hook( __FILE__, array('ucf_people_directory','deactivation'));
-
-// @TODO upon plugin activation, the permalinks must be flushed due to the custom rewrite rules
-// @TODO if we let the user define the directory url, have them flush rules when they change it (or do it automatically as well)
-// @TODO setting to allow custom path for directory
 

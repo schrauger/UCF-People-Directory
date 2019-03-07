@@ -1,8 +1,10 @@
 <?php
 
 class ucf_people_directory_shortcode {
-    const shortcode         = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
-    const posts_per_page     = '10'; // number of profiles to list per page when paginating
+    const shortcode_slug      = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
+    const shortcode_name      = 'People Directory';
+    const shortcode_description = 'Searchable directory of all people';
+    const posts_per_page      = '10'; // number of profiles to list per page when paginating
     const taxonomy_categories = ''; // slug for the 'categories' taxonomy
 
     const get_param_group = 'people_group'; // group or category person is in
@@ -11,16 +13,31 @@ class ucf_people_directory_shortcode {
     public function __construct() {
         add_action( 'init', array( $this, 'add_shortcode' ) );
         add_filter( 'query_vars', array($this, 'add_query_vars_filter' )); // tell wordpress about new url parameters
+        add_filter( 'ucf_college_shortcode_menu_item', array($this, 'add_ckeditor_shortcode'));
+
     }
 
     /**
      * Adds the shortcode to wordpress' index of shortcodes
      */
     public function add_shortcode() {
-        if ( ! ( shortcode_exists( self::shortcode ) ) ) {
-            add_shortcode( self::shortcode, array($this, 'replacement' ));
+        if ( ! ( shortcode_exists( self::shortcode_slug ) ) ) {
+            add_shortcode( self::shortcode_slug, array( $this, 'replacement' ));
         }
     }
+
+    /**
+     * Adds the shortcode to the ckeditor dropdown menu
+     */
+    function add_ckeditor_shortcode($shortcode_array){
+        $shortcode_array[] = array(
+            'slug' => self::shortcode_slug,
+            'name' => self::shortcode_name,
+            'description' => self::shortcode_description
+        );
+        return $shortcode_array;
+    }
+
 
     /**
      * Tells wordpress to listen for the 'people_group' parameter in the url. Used to filter down to specific profiles.
@@ -42,18 +59,27 @@ class ucf_people_directory_shortcode {
      */
     public function replacement( $attrs = null ){
         $replacement_data = ''; //string of html to return
-
-        // define defaults for shortcode attributes if user doesn't specify
-        $attributes = shortcode_atts(
-            array(
-                self::get_param_group => '',
-                ''
-            ), $attrs, self::shortcode );
-
         // print out search bar
         $replacement_data .= $this->search_bar_html();
 
-        $wp_query = $this->query_profiles($attributes);
+        // get people groups. if user is filtering down to a group, only get those records. otherwise, show groups the editor defined.
+        // allow user to specify a people_group (filter down from available groups)
+        if (get_query_var(self::get_param_group)){
+            $people_groups = get_query_var(self::get_param_group);
+        } else {
+            // user didn't specify a group, so show all the groups that the editor defined for this page
+            $people_groups = array();
+            if (have_rows('people_groups')){
+                while (have_rows('people_groups')){
+                    the_row();
+                    $group = get_sub_field('group');
+                    $people_groups[] = $group->slug;
+                }
+                reset_rows();
+            }
+        }
+
+        $wp_query = $this->query_profiles($people_groups);
         // print out profiles
         $replacement_data .= "<div class='profiles-list'>";
             $replacement_data .= $this->profiles_html($wp_query);
@@ -62,10 +88,8 @@ class ucf_people_directory_shortcode {
         wp_reset_postdata();
 
         // print out subcategories unless shortcode defines a specific category
-        if (!($attributes['people_group'])) {
-            $replacement_data .= $this->people_groups_html();
-        }
-        // $replacement_data .=
+        $replacement_data .= $this->people_groups_html();
+
 
         // print out pagination
         $replacement_data .= $this->pagination_html($wp_query);
@@ -85,7 +109,7 @@ class ucf_people_directory_shortcode {
         $current_page_url = wp_get_canonical_url();
         $html_search_bar .= "
         <div class='searchbar'>
-            <form id='searchform' action='$current_page_url' method='get'>
+            <form id='searchform' action='{$current_page_url}' method='get'>
                 <input 
                     class='searchbar' 
                     type='text' 
@@ -114,27 +138,31 @@ class ucf_people_directory_shortcode {
 
     /**
      * Return a string of HTML with all matching profiles
-     * @param $attributes
+     * @param $people_groups
      *
      * @return wp_query
      */
-    public function query_profiles($attributes){
-
-        // only allow user to specify people_group if the editor has not explicitely defined a people_group in the shortcode
-        if ($attributes['people_group']){
-            $people_group = $attributes[self::get_param_group];
-        } else {
-            $people_group = get_query_var(self::get_param_group);
-        }
+    public function query_profiles($people_groups){
 
         $paged = ( get_query_var ( 'paged' ) ) ? get_query_var ( 'paged' ) : 1; //default to page 1
         $search_by_name = ( get_query_var ( self::get_param_name ) ) ? get_query_var ( self::get_param_name ) : ''; //don't restrict by default
         $query_args = array(
-            'people_group' => $people_group,
             'paged' => $paged,
             'posts_per_page' => self::posts_per_page,
             'post_type' => 'person', // 'person' is a post type defined in ucf-people-cpt
-            's' => $search_by_name
+            's' => $search_by_name,
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'people_group',
+                    'field' => 'slug',
+                    'terms' => $people_groups,
+                    'include_children' => true,
+                    'operator' => 'IN'
+                )
+            ),
+            'orderby' => 'meta_value',
+            'meta_key' => 'person_orderby_name',
+            'order' => 'ASC'
         );
         return new WP_Query( $query_args );
 
@@ -319,6 +347,31 @@ class ucf_people_directory_shortcode {
         return $html_people_group_list;
     }
     // ############ Subcategories End
+
+    /**
+     * Only run this on plugin activation, as it's stored in the database
+     */
+    static function insert_shortcode_term(){
+        $taxonomy = new ucf_college_shortcode_taxonomy;
+        $taxonomy->create_taxonomy();
+        wp_insert_term(
+            self::shortcode_name,
+            ucf_college_shortcode_taxonomy::taxonomy_slug,
+            array(
+                'description' => self::shortcode_description,
+                'slug' => self::shortcode_slug
+            )
+        );
+    }
+
+    /**
+     * Run when plugin is disabled and/or uninstalled. This removes the shortcode from the contentof shortcodes in the taxonomy.
+     */
+    static function delete_shortcode_term(){
+        $taxonomy = new ucf_college_shortcode_taxonomy;
+        $taxonomy->create_taxonomy();
+        wp_delete_term(get_term_by('slug', self::shortcode_slug)->term_id, ucf_college_shortcode_taxonomy::taxonomy_slug);
+    }
 
 }
 new ucf_people_directory_shortcode();

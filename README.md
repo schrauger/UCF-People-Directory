@@ -1,5 +1,5 @@
-# UCF-People-Directory
-Directory viewer for the UCF People Custom Post Type
+# UCF-College-Accordion
+Accordion shortcode for the UCF College Theme
 
 Use [ucf_people_directory] shortcode on a page
 
