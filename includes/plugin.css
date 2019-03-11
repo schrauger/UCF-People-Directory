@@ -74,4 +74,10 @@ Individual contact listing within staff directory
     background: #fcfcfc;
     margin: 5px; }
 
-/*# sourceMappingURL=plugin.css.map */
+@media (max-width: 999px) {
+  .profiles-list .person {
+    flex-wrap: wrap !important; }
+    .profiles-list .person .photo {
+      width: 100% !important; }
+      .profiles-list .person .photo a {
+        background-position: center -80px !important; } }
