@@ -225,7 +225,7 @@ class ucf_people_directory_shortcode {
 
         $div_location = $this->contact_info( $location, 'location', $location_url );
         $div_email    = $this->contact_info( $email, 'email', "mailto:{$email}" );
-        $div_phone    = $this->contact_info( $phone, 'phone' );
+        $div_phone    = $this->contact_info( $phone, 'phone', "tel:{$phone}" );
 
         // ####
 
