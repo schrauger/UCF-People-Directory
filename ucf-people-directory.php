@@ -2,7 +2,7 @@
 /*
 Plugin Name: UCF People Directory
 Description: Provides a directory for the UCF people custom post type
-Version: 1.2.1
+Version: 1.2.2
 Author: Stephen Schrauger
 Plugin URI: https://github.com/schrauger/UCF-People-Directory
 Github Plugin URI: schrauger/UCF-People-Directory
@@ -38,24 +38,27 @@ class ucf_people_directory {
     }
 
     function add_css(){
-        wp_enqueue_style(
-            'ucf-people-directory-theme-style',
-            plugin_dir_url(__FILE__) . '/includes/plugin.css',
-            false,
-            filemtime( plugin_dir_path(__FILE__).'/includes/plugin.css'),
-            false
-        );
+	    if (file_exists(plugin_dir_path(__FILE__).'/includes/plugin.css')) {
+		    wp_enqueue_style(
+			    'ucf-people-directory-theme-style',
+			    plugin_dir_url( __FILE__ ) . '/includes/plugin.css',
+			    false,
+			    filemtime( plugin_dir_path( __FILE__ ) . '/includes/plugin.css' ),
+			    false
+		    );
+	    }
     }
 
     function add_js(){
-
-        wp_enqueue_script(
-            'ucf-people-directory-theme-script',
-            plugin_dir_url(__FILE__) . 'includes/plugin.js',
-            false,
-            filemtime( plugin_dir_path(__FILE__).'/includes/plugin.js'),
-            false
-        );
+	    if (file_exists(plugin_dir_path(__FILE__).'/includes/plugin.js')) {
+		    wp_enqueue_script(
+			    'ucf-people-directory-theme-script',
+			    plugin_dir_url( __FILE__ ) . 'includes/plugin.js',
+			    false,
+			    filemtime( plugin_dir_path( __FILE__ ) . '/includes/plugin.js' ),
+			    false
+		    );
+	    }
     }
 /*
     // add rewrite rules
