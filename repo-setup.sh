@@ -23,12 +23,12 @@ then
 fi
 git remote add dev        ssh://git@vps1.med.ucf.edu:32/var/www/repositories/dev/UCF-People-Directory.git
 
-#echo 'Adding staging remote (git push staging)'
-#if [[ $REMOTES =~ .*/staging/.* ]]
-#then
-#  git remote rm staging
-#fi
-#git remote add staging    ssh://git@vps1.med.ucf.edu:32/var/www/repositories/staging/UCF-People-Directory.git
+echo 'Adding staging remote (git push staging)'
+if [[ $REMOTES =~ .*/staging/.* ]]
+then
+  git remote rm staging
+fi
+git remote add staging    ssh://git@vps1.med.ucf.edu:32/var/www/repositories/staging/UCF-People-Directory.git
 
 echo 'Adding production remote (git push production)'
 if [[ $REMOTES =~ .*/production/.* ]]

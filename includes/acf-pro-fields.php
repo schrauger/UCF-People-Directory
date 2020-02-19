@@ -35,7 +35,7 @@ class ucf_people_directory_acf_pro_fields {
                                 'id'    => '',
                             ),
                             'collapsed'         => '',
-                            'min'               => 1,
+                            'min'               => 0,
                             'max'               => 0,
                             'layout'            => 'table',
                             'button_label'      => 'Add group',

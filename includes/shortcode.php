@@ -157,19 +157,25 @@ class ucf_people_directory_shortcode {
             'posts_per_page' => self::posts_per_page,
             'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
             's'              => $search_by_name,
-            'tax_query'      => array(
-                array(
-                    'taxonomy'         => 'people_group',
-                    'field'            => 'slug',
-                    'terms'            => $people_groups,
-                    'include_children' => true,
-                    'operator'         => 'IN'
-                )
-            ),
             'orderby'        => 'meta_value',
             'meta_key'       => 'person_orderby_name',
             'order'          => 'ASC'
         );
+
+        // if any group specified, filter to those groups. otherwise, show all.
+        if ($people_groups){
+        	$query_args['tax_query'] = array(
+		        array(
+			        'taxonomy'         => 'people_group',
+			        'field'            => 'slug',
+			        'terms'            => $people_groups,
+			        'include_children' => true,
+			        'operator'         => 'IN'
+		        )
+	        );
+        }
+
+
 
         return new WP_Query( $query_args );
 
