@@ -7,7 +7,9 @@ class ucf_people_directory_shortcode {
     const posts_per_page        = '10'; // number of profiles to list per page when paginating
     const taxonomy_categories   = ''; // slug for the 'categories' taxonomy
 
-    const get_param_group = 'people_group'; // group or category person is in
+	const taxonomy_name = 'people_group';
+	const acf_filter_term_name = 'specific_terms';
+    const get_param_group = 'group_search'; // group or category person is in
     const get_param_name  = 'name_search'; // restrict to profiles matching the user text
 
 //    public function __construct() {
@@ -74,8 +76,8 @@ class ucf_people_directory_shortcode {
             // user didn't specify a group, so show all the groups that the editor defined for this page
             $people_groups = array();
             $filter_active = get_query_var('filtered');
-            if ( ($filter_active === 'true' || $filter_active === true) && have_rows( self::get_param_group ) ) {
-                while ( have_rows( self::get_param_group ) ) {
+            if  (get_field('filtered') && have_rows( self::acf_filter_term_name ) ) {
+                while ( have_rows( self::acf_filter_term_name ) ) {
                     the_row();
                     $group           = get_sub_field( 'group' );
                     $people_groups[] = $group->slug;
@@ -174,7 +176,7 @@ class ucf_people_directory_shortcode {
         if ($people_groups){
         	$query_args['tax_query'] = array(
 		        array(
-			        'taxonomy'         => self::get_param_group,
+			        'taxonomy'         => self::taxonomy_name,
 			        'field'            => 'slug',
 			        'terms'            => $people_groups,
 			        'include_children' => true,
@@ -358,33 +360,30 @@ class ucf_people_directory_shortcode {
         }
 
 
-
+		$get_terms_arguments = array(
+			'taxonomy'   => self::taxonomy_name,
+			'hide_empty' => true, // hide empty groups, even if specified by editor
+		);
         $people_groups_term_ids = array();
-        if ( have_rows( self::get_param_group ) ) {
-            while ( have_rows( self::get_param_group ) ) {
+        if ( have_rows( self::acf_filter_term_name ) ) {
+            while ( have_rows( self::acf_filter_term_name ) ) {
                 the_row();
                 $group                 = get_sub_field( 'group' );
                 $people_groups_term_ids[] = $group->term_id;
             }
             reset_rows();
-        }
+	        $get_terms_arguments['include'] = $people_groups_term_ids; // only include terms specified by the editor
 
-        //
-        $people_groups_terms_top_level = get_terms(
-            array(
-                'taxonomy'   => self::get_param_group,
-                'hide_empty' => true, // hide empty groups, even if specified by editor
-                'include' => $people_groups_term_ids, // only include terms specified by the editor
-                //'parent' => 0 // only show top level groups - we'll get the children later for formatting
-            )
-        );
+        } else {
+        	$get_terms_arguments['parent'] = 0; // only show top level groups - we'll get the children later for formatting
+        }
+        $people_groups_terms_top_level = get_terms($get_terms_arguments);
 
         if (!$current_term){
             $html_people_group_list .= self::term_list_entry("All groups", $current_page_url, null, 'reset active');
         } else {
             $html_people_group_list .= self::term_list_entry("All groups", $current_page_url, null, 'reset');
         }
-
         foreach ( $people_groups_terms_top_level as $top_level_term ) {
             /* @var $term  WP_Term */
 
@@ -398,7 +397,7 @@ class ucf_people_directory_shortcode {
 
             $people_groups_terms_children = get_terms(
                 array(
-                    'taxonomy'   => self::get_param_group,
+                    'taxonomy'   => self::taxonomy_name,
                     'hide_empty' => true, // hide empty groups, even if specified by editor
                     'parent' => $top_level_term->term_id // only show top level children for this group
                 )

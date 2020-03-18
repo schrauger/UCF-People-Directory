@@ -56,7 +56,7 @@ class ucf_people_directory_acf_pro_fields {
                         array(
                             'key'               => 'field_5c8136ee0c0f6',
                             'label'             => 'People Directory Groups',
-                            'name'              => 'people_groups',
+                            'name'              => 'specific_terms',
                             'type'              => 'repeater',
                             'instructions'      => '',
                             'required'          => 0,
