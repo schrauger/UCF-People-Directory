@@ -65,7 +65,7 @@ class ucf_people_directory_shortcode {
 	static public function replacement( $attrs = null ) {
         $replacement_data = ''; //string of html to return
         // print out search bar
-		if (get_field('show_search_bar')) {
+		if (get_field('show_search_bar') || get_field('show_search_bar') == null) { // check for null for backwards compatibility
 			$replacement_data .= self::search_bar_html();
 		}
         // get people groups. if user is filtering down to a group, only get those records. otherwise, show groups the editor defined.
@@ -95,7 +95,7 @@ class ucf_people_directory_shortcode {
         wp_reset_postdata();
 
         // print out subcategories unless shortcode defines a specific category
-		if (get_field('show_group_filter_sidebar')) {
+		if (get_field('show_group_filter_sidebar')|| get_field('show_group_filter_sidebar') == null) { // check for null for backwards compatibility
 			$replacement_data .= self::people_groups_html();
 		}
 
