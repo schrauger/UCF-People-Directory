@@ -1,5 +1,5 @@
-# UCF-College-Accordion
-Accordion shortcode for the UCF College Theme
+# UCF-People-Directory
+People directory shortcode for the UCF College Theme. Also a block.
 
 Use [ucf_people_directory] shortcode on a page
 
