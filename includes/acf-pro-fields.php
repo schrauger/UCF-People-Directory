@@ -15,12 +15,44 @@ class ucf_people_directory_acf_pro_fields {
     }
 
     static function create_fields() {
-        if ( function_exists( 'acf_add_local_field_group' ) ) {
+	    if( function_exists('acf_register_block') ) {
+		    // register a testimonial block
+		    acf_register_block(array(
+			                       'name'				=> 'ucf_college_people_directory',
+			                       'title'				=> __('UCF People Directory'),
+			                       'description'		=> __('People directory.'),
+			                       'render_callback'	=> array('ucf_people_directory_shortcode','replacement_print'),
+			                       'category'			=> 'layout',
+			                       'icon'				=> 'screenoptions',
+			                       'keywords'			=> array( 'ucf', 'college','people','directory','profile','person' ),
+		                       ));
+	    }
+
+	    if ( function_exists( 'acf_add_local_field_group' ) ) {
             acf_add_local_field_group(
                 array(
                     'key'                   => 'group_5c81351daa8b2',
                     'title'                 => 'People Directory Options',
                     'fields'                => array(
+	                    array(
+		                    'key' => 'field_5e722eaa23422',
+		                    'label' => 'Filtered directory',
+		                    'name' => 'filtered',
+		                    'type' => 'true_false',
+		                    'instructions' => '',
+		                    'required' => 0,
+		                    'conditional_logic' => 0,
+		                    'wrapper' => array(
+			                    'width' => '',
+			                    'class' => '',
+			                    'id' => '',
+		                    ),
+		                    'message' => 'Show specific categories',
+		                    'default_value' => 0,
+		                    'ui' => 0,
+		                    'ui_on_text' => '',
+		                    'ui_off_text' => '',
+	                    ),
                         array(
                             'key'               => 'field_5c8136ee0c0f6',
                             'label'             => 'People Directory Groups',
@@ -28,14 +60,22 @@ class ucf_people_directory_acf_pro_fields {
                             'type'              => 'repeater',
                             'instructions'      => '',
                             'required'          => 0,
-                            'conditional_logic' => 0,
+                            'conditional_logic' => array(
+	                            array(
+		                            array(
+			                            'field' => 'field_5e722eaa23422',
+			                            'operator' => '==',
+			                            'value' => '1',
+		                            ),
+	                            ),
+                            ),
                             'wrapper'           => array(
                                 'width' => '',
                                 'class' => '',
                                 'id'    => '',
                             ),
                             'collapsed'         => '',
-                            'min'               => 0,
+                            'min'               => 1,
                             'max'               => 0,
                             'layout'            => 'table',
                             'button_label'      => 'Add group',
@@ -66,6 +106,13 @@ class ucf_people_directory_acf_pro_fields {
                         ),
                     ),
                     'location'              => array(
+	                    array(
+		                    array(
+			                    'param'    => 'block',
+			                    'operator' => '==',
+			                    'value'    => 'acf/ucf-college-people-directory',
+		                    ),
+	                    ),
                         array(
                             array(
                                 'param'    => 'post_taxonomy',
