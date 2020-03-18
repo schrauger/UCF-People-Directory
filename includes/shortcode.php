@@ -159,9 +159,10 @@ class ucf_people_directory_shortcode {
 
         $paged          = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1; //default to page 1
         $search_by_name = ( get_query_var( self::get_param_name ) ) ? get_query_var( self::get_param_name ) : ''; //don't restrict by default
+		$posts_per_page = ( get_field('profiles_per_page') ? get_field('profiles_per_page') : self::posts_per_page);
         $query_args     = array(
             'paged'          => $paged,
-            'posts_per_page' => self::posts_per_page,
+            'posts_per_page' => $posts_per_page,
             'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
             's'              => $search_by_name,
             'orderby'        => 'meta_value',

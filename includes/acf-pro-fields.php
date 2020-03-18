@@ -142,6 +142,27 @@ class ucf_people_directory_acf_pro_fields {
 		                    'ui_on_text' => 'Visible',
 		                    'ui_off_text' => 'Hidden',
 	                    ),
+	                    array(
+		                    'key' => 'field_5e72817c085cc',
+		                    'label' => 'Profiles per page',
+		                    'name' => 'profiles_per_page',
+		                    'type' => 'number',
+		                    'instructions' => '',
+		                    'required' => 1,
+		                    'conditional_logic' => 0,
+		                    'wrapper' => array(
+			                    'width' => '',
+			                    'class' => '',
+			                    'id' => '',
+		                    ),
+		                    'default_value' => 10,
+		                    'placeholder' => '',
+		                    'prepend' => '',
+		                    'append' => '',
+		                    'min' => 1,
+		                    'max' => 100,
+		                    'step' => 1,
+	                    ),
                     ),
                     'location'              => array(
 	                    array(
