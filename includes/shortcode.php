@@ -63,8 +63,9 @@ class ucf_people_directory_shortcode {
 	static public function replacement( $attrs = null ) {
         $replacement_data = ''; //string of html to return
         // print out search bar
-        $replacement_data .= self::search_bar_html();
-
+		if (get_field('show_search_bar')) {
+			$replacement_data .= self::search_bar_html();
+		}
         // get people groups. if user is filtering down to a group, only get those records. otherwise, show groups the editor defined.
         // allow user to specify a people_group (filter down from available groups)
         if ( get_query_var( self::get_param_group ) ) {
@@ -92,8 +93,9 @@ class ucf_people_directory_shortcode {
         wp_reset_postdata();
 
         // print out subcategories unless shortcode defines a specific category
-        $replacement_data .= self::people_groups_html();
-
+		if (get_field('show_group_filter_sidebar')) {
+			$replacement_data .= self::people_groups_html();
+		}
 
         // print out pagination
         $replacement_data .= self::pagination_html( $wp_query );
@@ -171,7 +173,7 @@ class ucf_people_directory_shortcode {
         if ($people_groups){
         	$query_args['tax_query'] = array(
 		        array(
-			        'taxonomy'         => 'people_group',
+			        'taxonomy'         => self::get_param_group,
 			        'field'            => 'slug',
 			        'terms'            => $people_groups,
 			        'include_children' => true,
@@ -357,8 +359,8 @@ class ucf_people_directory_shortcode {
 
 
         $people_groups_term_ids = array();
-        if ( have_rows( 'people_groups' ) ) {
-            while ( have_rows( 'people_groups' ) ) {
+        if ( have_rows( self::get_param_group ) ) {
+            while ( have_rows( self::get_param_group ) ) {
                 the_row();
                 $group                 = get_sub_field( 'group' );
                 $people_groups_term_ids[] = $group->term_id;
@@ -369,7 +371,7 @@ class ucf_people_directory_shortcode {
         //
         $people_groups_terms_top_level = get_terms(
             array(
-                'taxonomy'   => 'people_group',
+                'taxonomy'   => self::get_param_group,
                 'hide_empty' => true, // hide empty groups, even if specified by editor
                 'include' => $people_groups_term_ids, // only include terms specified by the editor
                 //'parent' => 0 // only show top level groups - we'll get the children later for formatting
@@ -395,7 +397,7 @@ class ucf_people_directory_shortcode {
 
             $people_groups_terms_children = get_terms(
                 array(
-                    'taxonomy'   => 'people_group',
+                    'taxonomy'   => self::get_param_group,
                     'hide_empty' => true, // hide empty groups, even if specified by editor
                     'parent' => $top_level_term->term_id // only show top level children for this group
                 )
@@ -426,7 +428,7 @@ class ucf_people_directory_shortcode {
      */
 	static public function term_list_entry($title, $current_page_url, $slug, $class = 'parent') {
         if ($slug) {
-            $url_filter = "?people_group={$slug}";
+            $url_filter = "?" . self::get_param_group . "={$slug}";
             $title_text = "Display only {$title} profiles";
         } else {
             $url_filter = ""; //if no slug is defined, this is the 'All groups' reset filter
