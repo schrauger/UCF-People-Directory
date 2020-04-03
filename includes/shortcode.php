@@ -2,15 +2,15 @@
 
 class ucf_people_directory_shortcode {
     const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
-    const shortcode_name        = 'People Directory';
+    const shortcode_name        = 'People Directory (deprecated - use blocks)';
     const shortcode_description = 'Searchable directory of all people';
     const posts_per_page        = '10'; // number of profiles to list per page when paginating
     const taxonomy_categories   = ''; // slug for the 'categories' taxonomy
 
 	const taxonomy_name = 'people_group';
 	const acf_filter_term_name = 'specific_terms';
-    const get_param_group = 'group_search'; // group or category person is in
-    const get_param_name  = 'name_search'; // restrict to profiles matching the user text
+    const GET_param_group = 'group_search'; // group or category person is in
+    const GET_param_name  = 'name_search'; // restrict to profiles matching the user text
 
 //    public function __construct() {
 //        add_action( 'init', array( $this, 'add_shortcode' ) );
@@ -30,6 +30,10 @@ class ucf_people_directory_shortcode {
 
     /**
      * Adds the shortcode to the ckeditor dropdown menu
+     *
+     * @var $shortcode_array array
+     *
+     * @return array
      */
 	static function add_ckeditor_shortcode( $shortcode_array ) {
         $shortcode_array[] = array(
@@ -50,8 +54,8 @@ class ucf_people_directory_shortcode {
      * @return array
      */
 	static public function add_query_vars_filter( $vars ) {
-        $vars[] = self::get_param_group;
-        $vars[] = self::get_param_name; // person name, from user submitted search text
+        $vars[] = self::GET_param_group;
+        $vars[] = self::GET_param_name; // person name, from user submitted search text
         return $vars;
     }
 
@@ -63,46 +67,37 @@ class ucf_people_directory_shortcode {
      * @return mixed
      */
 	static public function replacement( $attrs = null ) {
-        $replacement_data = ''; //string of html to return
+
+		$obj_shortcode_attributes = new ucf_people_directory_shortcode_attributes();
+
+        //$replacement_data = ''; //string of html to return
         // print out search bar
-		if (get_field('show_search_bar') || get_field('show_search_bar') == null) { // check for null for backwards compatibility
-			$replacement_data .= self::search_bar_html();
+		if ($obj_shortcode_attributes->show_search_bar) { // check for null for backwards compatibility
+			$obj_shortcode_attributes->replacement_data .= self::search_bar_html($obj_shortcode_attributes);
 		}
-        // get people groups. if user is filtering down to a group, only get those records. otherwise, show groups the editor defined.
-        // allow user to specify a people_group (filter down from available groups)
-        if ( get_query_var( self::get_param_group ) ) {
-            $people_groups = get_query_var( self::get_param_group );
-        } else {
-            // user didn't specify a group, so show all the groups that the editor defined for this page
-            $people_groups = array();
-            $filter_active = get_query_var('filtered');
-            if  (get_field('filtered') && have_rows( self::acf_filter_term_name ) ) {
-                while ( have_rows( self::acf_filter_term_name ) ) {
-                    the_row();
-                    $group           = get_sub_field( 'group' );
-                    $people_groups[] = $group->slug;
-                }
-                reset_rows();
-            }
+
+		$wp_query = null;
+		if ($obj_shortcode_attributes->show_contacts) { // user has searched, or the user or page owner has specified a group. show the contacts.
+	        $wp_query = self::query_profiles( $obj_shortcode_attributes );
+	        // print out profiles
+			$obj_shortcode_attributes->replacement_data .= "<div class='profiles-list'>";
+			$obj_shortcode_attributes->replacement_data .= self::profiles_html( $wp_query );
+			$obj_shortcode_attributes->replacement_data .= "</div>";
+
+	        wp_reset_postdata();
         }
-
-        $wp_query = self::query_profiles( $people_groups );
-        // print out profiles
-        $replacement_data .= "<div class='profiles-list'>";
-        $replacement_data .= self::profiles_html( $wp_query );
-        $replacement_data .= "</div>";
-
-        wp_reset_postdata();
-
         // print out subcategories unless shortcode defines a specific category
-		if (get_field('show_group_filter_sidebar')|| get_field('show_group_filter_sidebar') == null) { // check for null for backwards compatibility
-			$replacement_data .= self::people_groups_html();
+		if ($obj_shortcode_attributes->show_group_filter_sidebar) {
+			$obj_shortcode_attributes->replacement_data .= self::people_groups_html($obj_shortcode_attributes);
 		}
 
-        // print out pagination
-        $replacement_data .= self::pagination_html( $wp_query );
+        // print out pagination, if we're showing contacts
+		if ($obj_shortcode_attributes->show_contacts) {
+			$obj_shortcode_attributes->replacement_data .= self::pagination_html( $wp_query, $obj_shortcode_attributes );
+		}
 
-        return $replacement_data;
+
+        return $obj_shortcode_attributes->replacement_data;
     }
 
 	static function replacement_print() {
@@ -113,12 +108,14 @@ class ucf_people_directory_shortcode {
 
     /**
      * Return a string of HTML for the search input form
+     *
+     * @param $shortcode_attributes ucf_people_directory_shortcode_attributes
+     *
      * @return string
      */
-	static public function search_bar_html() {
+	static public function search_bar_html($shortcode_attributes) {
         $html_search_bar  = '';
-        $name_search      = self::get_param_name;
-        $name_search_value = get_query_var(self::get_param_name);
+        $name_search      = self::GET_param_name;
         $current_page_url = wp_get_canonical_url();
         $html_search_bar .= "
         <div class='searchbar'>
@@ -130,7 +127,7 @@ class ucf_people_directory_shortcode {
                     placeholder='Search by Name' 
                     onfocus='this.placeholder = \"\" '
                     onblur='this.placeholder = \"Search by Name\"'
-                    value='{$name_search_value}'
+                    value='{$shortcode_attributes->search_by_name}'
                 />
                 <input 
                     class='searchsubmit'
@@ -153,20 +150,19 @@ class ucf_people_directory_shortcode {
     /**
      * Return a string of HTML with all matching profiles
      *
-     * @param $people_groups
-     *
-     * @return wp_query
-     */
-	static public function query_profiles( $people_groups ) {
+	 * @param $shortcode_attributes ucf_people_directory_shortcode_attributes
+	 *
+	 * @return WP_Query
+	 */
+	static public function query_profiles(  $shortcode_attributes ) {
 
-        $paged          = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1; //default to page 1
-        $search_by_name = ( get_query_var( self::get_param_name ) ) ? get_query_var( self::get_param_name ) : ''; //don't restrict by default
-		$posts_per_page = ( get_field('profiles_per_page') ? get_field('profiles_per_page') : self::posts_per_page);
+		$people_groups = ($shortcode_attributes->people_group_slug ? $shortcode_attributes->people_group_slug : $shortcode_attributes->editor_people_groups);
+
         $query_args     = array(
-            'paged'          => $paged,
-            'posts_per_page' => $posts_per_page,
+            'paged'          => $shortcode_attributes->paged,
+            'posts_per_page' => $shortcode_attributes->posts_per_page,
             'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
-            's'              => $search_by_name,
+            's'              => $shortcode_attributes->search_by_name,
             'orderby'        => 'meta_value',
             'meta_key'       => 'person_orderby_name',
             'order'          => 'ASC'
@@ -191,8 +187,25 @@ class ucf_people_directory_shortcode {
 
     }
 
+	/**
+	 * Gets an ordered list of profile ids, sorted by specified weights. Used when querying a category
+	 * and you want a specific set of people to be shown first. You can specify weights so that one
+	 * or two people are at the top, then another group next, and finally everyone else in the
+	 * category.
+	 */
+    static public function profiles_weighted_id_list() {
+		// first, find all profiles that have a 'head of department' or similar tag for the currently filtered department.
+	    // sort by their weight. smaller numbers first.
+
+
+	    // next, query for all profiles in the category, and use the previous array as the initial sortby field, but also
+	    // sort by the orderby_name field after.
+
+
+    }
+
     /**
-     * @param $wp_query
+     * @param $wp_query WP_Query
      *
      * @return string
      */
@@ -306,18 +319,28 @@ class ucf_people_directory_shortcode {
 
     // ############ Pagination Start
 
-	static public function pagination_html( $wp_query ) {
+	/**
+	 * Page links to go to other pages for the current search.
+	 * You should only run this when actually showing contact cards. No use in page buttons to view more of nothing.
+	 * @param $wp_query WP_Query
+	 * @param $shortcode_attributes ucf_people_directory_shortcode_attributes
+	 *
+	 * @return string
+	 */
+	static public function pagination_html( $wp_query, $shortcode_attributes ) {
         $html_pagination = "<div class='pagination'>";
 
-        $html_pagination .= paginate_links( array(
-                                                'base'      => str_replace( 999999999, '%#%', esc_url( get_pagenum_link( 999999999 ) ) ),
-                                                'total'     => $wp_query->max_num_pages,
-                                                'current'   => max( 1, get_query_var( 'paged' ) ),
-                                                'end_size'  => 2,
-                                                'mid_size'  => 2,
-                                                'prev_next' => true
+		$html_pagination .= paginate_links(
+			array(
+				'base'      => str_replace( 999999999, '%#%', esc_url( get_pagenum_link( 999999999 ) ) ),
+				'total'     => $wp_query->max_num_pages,
+				'current'   => max( 1, $shortcode_attributes->paged ),
+				'end_size'  => 2,
+				'mid_size'  => 2,
+				'prev_next' => true
 
-                                            ) );
+			)
+		);
         $html_pagination .= "</div>";
 
         return $html_pagination;
@@ -326,11 +349,18 @@ class ucf_people_directory_shortcode {
 
     // ############ Subcategories Start
 
-	static public function people_groups_html() {
+	/**
+	 * Html wrapper for people groups list html
+	 *
+	 * @param $shortcode_attributes ucf_people_directory_shortcode_attributes
+	 *
+	 * @return string
+	 */
+	static public function people_groups_html($shortcode_attributes) {
         $html_people_groups = '';
 
 
-        $people_group_list_html = self::people_group_list_html();
+        $people_group_list_html = self::people_group_list_html($shortcode_attributes);
 
         $html_people_groups .= "
             <div class='people_groups'>
@@ -348,45 +378,36 @@ class ucf_people_directory_shortcode {
 
     /**
      * Sidebar with a list of people groups. Users can select a group to filter down to profiles only in that group.
+     *
+     * @param $shortcode_attributes ucf_people_directory_shortcode_attributes
+     *
      * @return string
      */
-	static public function people_group_list_html() {
+	static public function people_group_list_html( $shortcode_attributes) {
         $html_people_group_list = '';
         $current_page_url       = wp_get_canonical_url();
-        if ( get_query_var( self::get_param_group ) ) {
-            $current_term = get_query_var( self::get_param_group );
-        } else {
-            $current_term = null;
-        }
+
+        $current_term = $shortcode_attributes->people_group_slug;
 
 
 		$get_terms_arguments = array(
 			'taxonomy'   => self::taxonomy_name,
 			'hide_empty' => true, // hide empty groups, even if specified by editor
 		);
-        $people_groups_term_ids = array();
-        if ( have_rows( self::acf_filter_term_name ) ) {
-            while ( have_rows( self::acf_filter_term_name ) ) {
-                the_row();
-                $group                 = get_sub_field( 'group' );
-                $people_groups_term_ids[] = $group->term_id;
-            }
-            reset_rows();
-	        $get_terms_arguments['include'] = $people_groups_term_ids; // only include terms specified by the editor
-
+        if ( sizeof($shortcode_attributes->editor_people_groups) > 0 ) {
+	        $get_terms_arguments['include'] = $shortcode_attributes->editor_people_groups_ids; // only include terms specified by the editor
         } else {
         	$get_terms_arguments['parent'] = 0; // only show top level groups - we'll get the children later for formatting
         }
-        $people_groups_terms_top_level = get_terms($get_terms_arguments);
 
+        $people_groups_terms_top_level = new WP_Term_Query($get_terms_arguments);
         if (!$current_term){
             $html_people_group_list .= self::term_list_entry("All groups", $current_page_url, null, 'reset active');
         } else {
             $html_people_group_list .= self::term_list_entry("All groups", $current_page_url, null, 'reset');
         }
-        foreach ( $people_groups_terms_top_level as $top_level_term ) {
-            /* @var $term  WP_Term */
-
+        foreach ( $people_groups_terms_top_level->terms as $top_level_term ) {
+            /* @var $top_level_term  WP_Term */
 
             // list the parent
             if ( $current_term == $top_level_term->slug ){
@@ -428,7 +449,7 @@ class ucf_people_directory_shortcode {
      */
 	static public function term_list_entry($title, $current_page_url, $slug, $class = 'parent') {
         if ($slug) {
-            $url_filter = "?" . self::get_param_group . "={$slug}";
+            $url_filter = "?" . self::GET_param_group . "={$slug}";
             $title_text = "Display only {$title} profiles";
         } else {
             $url_filter = ""; //if no slug is defined, this is the 'All groups' reset filter
@@ -473,6 +494,121 @@ class ucf_people_directory_shortcode {
         wp_delete_term( get_term_by( 'slug', self::shortcode_slug )->term_id, ucf_college_shortcode_taxonomy::taxonomy_slug );
     }
 
+}
+
+class ucf_people_directory_shortcode_attributes {
+
+	/** @var bool whether to show the search bar or not */
+	public $show_search_bar = true;
+
+	/** @var bool whether to show the actual contact cards or not */
+	public $show_contacts = false;
+
+	/** @var bool whether to show the sidebar with group filter links or not */
+	public $show_group_filter_sidebar = false;
+
+	/** @var string the actual html that gets printed out */
+	public $replacement_data = '';
+
+	/** @var array editor specified array of people groups slugs to show in directory. if empty, show everyone (full directory) */
+	public $editor_people_groups = [];
+
+	/** @var array editor specified array of people groups ids to show in directory. if empty, show everyone (full directory) */
+	public $editor_people_groups_ids = [];
+
+	/** @var string user specified people groups slug to filter. user overrides editor. if empty, show editor people groups */
+	public $people_group_slug = '';
+
+	/** @var string user specified search string */
+	public $search_by_name = '';
+
+	/** @var integer current page number */
+	public $paged = 1;
+
+	/** @var integer number of people to show per page */
+	public $posts_per_page = ucf_people_directory_shortcode::posts_per_page;
+
+	public function __construct() {
+		$this->show_search_bar = (get_field('show_search_bar') || get_field('show_search_bar') === null);
+		$this->initialize_editor_specified_groups();
+		$this->initialize_user_specified_people_groups();
+		$this->search_by_name = ( get_query_var( ucf_people_directory_shortcode::GET_param_name ) ) ? get_query_var( ucf_people_directory_shortcode::GET_param_name ) : '';
+
+		if ( ( $this->people_group_slug != '') || ( $this->search_by_name != '')) { // user has searched, or the user or page owner has specified a group. show the contacts.
+			$this->show_contacts = true;
+		}
+
+		// @TODO add another flag in ACF for the editor to allow contact cards to show on main view, even when user has not filtered anything by name or category.
+		// this defaults to false, as that's the default value for show_contacts.
+		/*if (some acf field == true){
+			$this->show_contacts = true;
+		}*/
+
+		$this->paged = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1; //default to page 1;
+		$this->posts_per_page = ( get_field('profiles_per_page') ? get_field('profiles_per_page') : ucf_people_directory_shortcode::posts_per_page);
+		$this->show_group_filter_sidebar = (get_field('show_group_filter_sidebar')|| get_field('show_group_filter_sidebar') === null);
+
+	}
+
+	/**
+	 * Gets the editor specified groups from the database.
+	 */
+	protected function initialize_editor_specified_groups(){
+		if  (get_field('filtered') && have_rows( ucf_people_directory_shortcode::acf_filter_term_name ) ) {
+			while ( have_rows( ucf_people_directory_shortcode::acf_filter_term_name ) ) {
+				the_row();
+				$group           = get_sub_field( 'group' );
+				$this->editor_people_groups[] = $group->slug;
+				$this->editor_people_groups_ids[] = $group->term_id;
+			}
+			reset_rows();
+		}
+	}
+
+	/**
+	 * Note: run *after* the editor specified groups has been initialized
+	 * Sets the people_groups filter variable. It checks the user input against allowed categories, and resets it to defauls if user input is invalid.
+	 */
+	protected function initialize_user_specified_people_groups(){
+		if ( get_query_var( ucf_people_directory_shortcode::GET_param_group ) ) {
+			// user specified a group to filter to
+			$u_people_group = get_query_var( ucf_people_directory_shortcode::GET_param_group ); // possibly unsafe value. check against allowed values
+
+			$matching_people_group_obj = get_term_by('slug', $u_people_group, ucf_people_directory_shortcode::taxonomy_name);
+			if ($matching_people_group_obj) {
+				if ($this->editor_people_groups){
+					// we have a user group, and the editor also defined one or more groups. we must now check that the user
+					// specified group is one of the editor specified groups, or that it is a descendent of one of the editor groups.
+
+					foreach ($this->editor_people_groups as $editor_group_slug){
+						if ($editor_group_slug === $u_people_group) {
+							// user filter equals one of the root editor groups
+							$this->people_group_slug = $u_people_group;
+						} elseif (term_is_ancestor_of(get_term_by('slug',$editor_group_slug), $matching_people_group_obj, ucf_people_directory_shortcode::taxonomy_name)) {
+							// user filter equals a descendent of one of the root editor groups
+							$this->people_group_slug = $u_people_group;
+						} else {
+							// no match yet. do nothing.
+						}
+					}
+					if (!$this->people_group_slug) {
+						// no match was found. user tried to filter to a group outside the allowed groups. default to editor groups.
+						$this->people_group_slug = null;
+					}
+
+				} else {
+					// editor did not specify any group. this is a main directory. therefore, allow all user-specified groups (that exist).
+					$this->people_group_slug = $u_people_group;
+				}
+			} else {
+				// term slug is not found. default to editor groups. user may have tried typing a group manually
+				$this->people_group_slug = null;
+			}
+		} else {
+			// user didn't specify a group, so show all the groups that the editor defined for this page
+			$this->people_group_slug = null;
+		}
+	}
 }
 
 //new ucf_people_directory_shortcode();
