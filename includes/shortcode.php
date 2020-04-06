@@ -158,11 +158,11 @@ class ucf_people_directory_shortcode {
 		global $wpdb;
 
 		$single_category = '';
-		if ($shortcode_attributes->people_group_slug || sizeof($shortcode_attributes->editor_people_groups === 1)){
+		if ($shortcode_attributes->people_group_slug){
 			// user asked for a specific category. we now need to look for weighted people.
 			$single_category = $shortcode_attributes->people_group_slug;
 			$weighted_people = self::profiles_weighted_id_list($single_category, $shortcode_attributes->search_by_name);
-		} elseif (sizeof($shortcode_attributes->editor_people_groups === 1)) {
+		} elseif (sizeof($shortcode_attributes->editor_people_groups) === 1) {
 			// the editor is showing one single department. we now need to look for weighted people.
 			$single_category = $shortcode_attributes->editor_people_groups[0];
 			$weighted_people = self::profiles_weighted_id_list($single_category, $shortcode_attributes->search_by_name);
