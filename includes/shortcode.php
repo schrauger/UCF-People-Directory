@@ -695,11 +695,10 @@ class ucf_people_directory_shortcode_attributes {
 			$this->show_contacts = true;
 		}
 
-		// @TODO add another flag in ACF for the editor to allow contact cards to show on main view, even when user has not filtered anything by name or category.
 		// this defaults to false, as that's the default value for show_contacts.
-		/*if (some acf field == true){
+		if (get_field('initially_shown')){
 			$this->show_contacts = true;
-		}*/
+		}
 
 		$this->paged = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1; //default to page 1;
 		$this->posts_per_page = ( get_field('profiles_per_page') ? get_field('profiles_per_page') : ucf_people_directory_shortcode::posts_per_page);

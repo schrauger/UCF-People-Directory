@@ -47,6 +47,25 @@ class ucf_people_directory_acf_pro_fields {
 					'title'                 => 'People Directory Options',
 					'fields'                => array(
 						array(
+							'key'               => 'field_5e722eaa2347a',
+							'label'             => 'Initial view',
+							'name'              => 'initially_shown',
+							'type'              => 'true_false',
+							'instructions'      => '',
+							'required'          => 0,
+							'conditional_logic' => 0,
+							'wrapper'           => array(
+								'width' => '',
+								'class' => '',
+								'id'    => '',
+							),
+							'message'           => 'Show contact cards on initial view',
+							'default_value'     => 0,
+							'ui'                => 1,
+							'ui_on_text'        => 'Visible',
+							'ui_off_text'       => 'Hidden',
+						),
+						array(
 							'key'               => 'field_5e722eaa23422',
 							'label'             => 'Filtered directory',
 							'name'              => 'filtered',
