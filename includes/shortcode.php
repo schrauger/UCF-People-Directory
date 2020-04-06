@@ -148,27 +148,51 @@ class ucf_people_directory_shortcode {
     // ############ Profile Output Start
 
     /**
-     * Return a string of HTML with all matching profiles
+     * Return a string of HTML with all matching profiles. If a single category is specified, weighted profiles appear first.
      *
 	 * @param $shortcode_attributes ucf_people_directory_shortcode_attributes
 	 *
 	 * @return WP_Query
 	 */
 	static public function query_profiles(  $shortcode_attributes ) {
+		global $wpdb;
 
+		$single_category = '';
+		if ($shortcode_attributes->people_group_slug || sizeof($shortcode_attributes->editor_people_groups === 1)){
+			// user asked for a specific category. we now need to look for weighted people.
+			$single_category = $shortcode_attributes->people_group_slug;
+			$weighted_people = self::profiles_weighted_id_list($single_category, $shortcode_attributes->search_by_name);
+		} elseif (sizeof($shortcode_attributes->editor_people_groups === 1)) {
+			// the editor is showing one single department. we now need to look for weighted people.
+			$single_category = $shortcode_attributes->editor_people_groups[0];
+			$weighted_people = self::profiles_weighted_id_list($single_category, $shortcode_attributes->search_by_name);
+		} else {
+			// user has not specified a category. weights don't come into effect, since we don't weight multi category views.
+			$weighted_people = [];
+		}
+
+		$query_args     = array(
+			'paged'          => $shortcode_attributes->paged,
+			'posts_per_page' => $shortcode_attributes->posts_per_page,
+			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
+			's'              => $shortcode_attributes->search_by_name,
+			'orderby'        => 'meta_value',
+			'meta_key'       => 'person_orderby_name',
+			'order'          => 'ASC',
+		);
+
+		if (sizeof($weighted_people > 0)){
+			// weighted people found. run another query to get EVERY person to create an array of ids.
+			$all_people = self::profiles_id_list($single_category, $shortcode_attributes->search_by_name);
+			$correctly_sorted_people = array_merge($weighted_people, $all_people);
+			$correctly_sorted_people = array_unique($correctly_sorted_people);
+			// now only select those profiles, and in the order specified
+			$query_args['post__in'] = $correctly_sorted_people;
+			$query_args['orderby'] = 'post__in';
+		}
+
+		// if any group specified, filter to those groups. otherwise, show all.
 		$people_groups = ($shortcode_attributes->people_group_slug ? $shortcode_attributes->people_group_slug : $shortcode_attributes->editor_people_groups);
-
-        $query_args     = array(
-            'paged'          => $shortcode_attributes->paged,
-            'posts_per_page' => $shortcode_attributes->posts_per_page,
-            'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
-            's'              => $shortcode_attributes->search_by_name,
-            'orderby'        => 'meta_value',
-            'meta_key'       => 'person_orderby_name',
-            'order'          => 'ASC'
-        );
-
-        // if any group specified, filter to those groups. otherwise, show all.
         if ($people_groups){
         	$query_args['tax_query'] = array(
 		        array(
@@ -181,10 +205,11 @@ class ucf_people_directory_shortcode {
 	        );
         }
 
-
+		// Now we have all profiles, with the correct weighted ones at the beginning.
+		// Finally, do a WP_QUERY, passing in our exact list of profiles, which will
+		// honor the sort we specify.
 
         return new WP_Query( $query_args );
-
     }
 
 	/**
@@ -192,17 +217,149 @@ class ucf_people_directory_shortcode {
 	 * and you want a specific set of people to be shown first. You can specify weights so that one
 	 * or two people are at the top, then another group next, and finally everyone else in the
 	 * category.
+	 *
+	 * @param string $single_category_slug
+	 *
+	 * @param string $name_search
+	 *
+	 * @return array
 	 */
-    static public function profiles_weighted_id_list() {
+    static public function profiles_weighted_id_list($single_category_slug, $name_search = null) {
 		// first, find all profiles that have a 'head of department' or similar tag for the currently filtered department.
 	    // sort by their weight. smaller numbers first.
+	    $query_args     = array(
+	    	// Don't use paged. We want ALL profiles that have a weight.
+		    // Then this list of ids will be given to another wp_query, which will paginate and filter as needed.
+		    //'paged'          => $shortcode_attributes->paged,
+		    'posts_per_page' => -1,
+		    'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
+		    's'              => $name_search,
+		    'orderby'        => 'meta_value',
+		    'meta_key'       => 'person_orderby_name', // we still order by person name. if weights are equal, names should be sorted.
+		    'order'          => 'ASC',
+
+		    // only query the user-specified people group.
+		    // if the user hasn't specified one, this function shouldn't be called.
+		    // we don't weight any profiles on the default view.
+		    'tax_query' => array(
+			    array(
+				    'taxonomy'         => self::taxonomy_name,
+				    'field'            => 'slug',
+				    'terms'            => $single_category_slug,
+				    'include_children' => true,
+				    'operator'         => '='
+			    )
+		    ),
+
+		    // only get profiles with a weight for the user-specified category.
+		    // also, check that the custom_sort_order boolean is true. if the editor
+		    // marks it as false, the old data is still in the database, but we shouldn't sort by it.
+		    'meta_query'	=> array(
+			    'relation'		=> 'AND',
+			    array(
+				    'key'		=> 'departments_$_department',
+				    'compare'	=> '=',
+				    'value'		=> get_term_by('slug', $single_category_slug, ucf_people_directory_shortcode::taxonomy_name)->term_id,
+				    // acf stores taxonomy by id within the database backend, so convert the user slug to id
+			    ),
+			    array(
+				    'key'		=> 'custom_sort_order',
+				    'compare'	=> '=',
+				    'value'		=> '1',
+			    )
+		    ),
+		    'suppress_filters' => false
+	    );
+
+
+
+
+	    add_filter('posts_where', array('ucf_people_directory_shortcode','acf_meta_subfield_filter'));
+
+	    $wp_query = new WP_Query($query_args);
+
+	    remove_filter('posts_where', array('ucf_people_directory_shortcode','acf_meta_subfield_filter'));
 
 
 	    // next, query for all profiles in the category, and use the previous array as the initial sortby field, but also
 	    // sort by the orderby_name field after.
 
+	    $weighted_array = [];
+	    $single_category_id = get_term_by('slug', $single_category_slug, ucf_people_directory_shortcode::taxonomy_name)->term_id;
+	    if ( $wp_query->have_posts() ) {
+		    while ( $wp_query->have_posts() ) {
+			    $wp_query->the_post();
+			    // get the matching weight for our category
+			    while (have_rows('departments', get_the_ID())){ // the_post apparently doesn't set the right global variables, so we explicitly tell acf the post id
+			    	the_row();
+			    	$department = get_sub_field('department');
+			    	if ($department === $single_category_id) {
+			    		// found the matching weight
+					    $weighted_array[get_the_ID()] = get_sub_field('weight');
+					    break;
+				    }
+			    }
+		    }
+	    }
+
+	    // sort the unweighted array by weights
+	    asort($weighted_array);
+	    return array_keys($weighted_array); // keys are the post id. they should now be sorted
 
     }
+
+	/**
+	 * Gets an ordered list of profile ids, unsorted.
+	 *
+	 * @param string $single_category_slug
+	 *
+	 * @param string $name_search
+	 *
+	 * @return array
+	 */
+    static public function profiles_id_list($single_category_slug, $name_search = null){
+	    global $wpdb;
+
+	    $query_args     = array(
+		    'posts_per_page' => -1,
+		    'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
+		    's'              => $name_search,
+		    'orderby'        => 'meta_value',
+		    'meta_key'       => 'person_orderby_name',
+		    'order'          => 'ASC',
+		    'fields'         => 'ids', // only get a list of ids
+
+		    // only query the user-specified people group.
+		    // if the user hasn't specified one, this function shouldn't be called.
+		    // we don't weight any profiles on the default view.
+		    'tax_query' => array(
+			    array(
+				    'taxonomy'         => self::taxonomy_name,
+				    'field'            => 'slug',
+				    'terms'            => $single_category_slug,
+				    'include_children' => true,
+				    'operator'         => '='
+			    )
+		    ),
+	    );
+	    $wp_query = new WP_Query($query_args);
+	    return $wp_query->posts;
+    }
+
+	/**
+	 * Alters the WP SQL query to allow filtering posts based on a repeater subfield.
+	 * Turns 'key = parent_$_child' to 'key LIKE parent_%_child', replacing the dollar sign with percent,
+	 * and the equals with LIKE.
+	 * @param $where
+	 *
+	 * @return mixed
+	 */
+	static public function acf_meta_subfield_filter( $where ) {
+
+		$where = str_replace('meta_key = \'departments_$_department', "meta_key LIKE 'departments_%_department", $where);
+		//$where = str_replace('meta_key = \'departments_$_weight', "meta_key LIKE 'departments_%_weight", $where);
+		return $where;
+	}
 
     /**
      * @param $wp_query WP_Query
