@@ -71,7 +71,13 @@ class ucf_people_directory_shortcode {
 
 		$obj_shortcode_attributes = new ucf_people_directory_shortcode_attributes();
 
-		//$replacement_data = ''; //string of html to return
+		// wrapper div. special class if not showing cards.
+		if ($obj_shortcode_attributes->show_contacts){
+			$obj_shortcode_attributes->replacement_data .= "<div class='ucf-people-directory'>";
+		} else {
+			$obj_shortcode_attributes->replacement_data .= "<div class='ucf-people-directory no-card-view'>";
+		}
+
 		// print out search bar
 		if ( $obj_shortcode_attributes->show_search_bar ) {
 			$obj_shortcode_attributes->replacement_data .= self::search_bar_html( $obj_shortcode_attributes );
@@ -95,6 +101,7 @@ class ucf_people_directory_shortcode {
 			$obj_shortcode_attributes->replacement_data .= self::pagination_html( $wp_query, $obj_shortcode_attributes );
 		}
 
+		$obj_shortcode_attributes->replacement_data .= "</div>";
 
 		return $obj_shortcode_attributes->replacement_data;
 	}
