@@ -72,7 +72,7 @@ class ucf_people_directory_shortcode {
 		$obj_shortcode_attributes = new ucf_people_directory_shortcode_attributes();
 
 		// wrapper div. special class if not showing cards.
-		if ($obj_shortcode_attributes->show_contacts){
+		if ( $obj_shortcode_attributes->show_contacts ) {
 			$obj_shortcode_attributes->replacement_data .= "<div class='ucf-people-directory'>";
 		} else {
 			$obj_shortcode_attributes->replacement_data .= "<div class='ucf-people-directory no-card-view'>";
@@ -293,7 +293,7 @@ class ucf_people_directory_shortcode {
 				$wp_query->the_post();
 				$person_id = get_the_ID();
 				// get the matching weight for our category
-				$weighted_array[ $person_id ] = self::acf_weight_for_category($single_category_id, $person_id);
+				$weighted_array[ $person_id ] = self::acf_weight_for_category( $single_category_id, $person_id );
 			}
 		}
 
@@ -358,14 +358,15 @@ class ucf_people_directory_shortcode {
 
 	/**
 	 * Returns the weight, if any, for the specified category and the specified or current person.
-	 * @param int $category_id ID (not slug) of the category-specific weight to look for
-	 * @param int|null $person_id Person profile to look for. If unspecified, uses current post.
+	 *
+	 * @param int      $category_id ID (not slug) of the category-specific weight to look for
+	 * @param int|null $person_id   Person profile to look for. If unspecified, uses current post.
 	 *
 	 * @return integer
 	 */
-	static public function acf_weight_for_category(  $category_id, $person_id = null ) {
+	static public function acf_weight_for_category( $category_id, $person_id = null ) {
 		$return_weight = null;
-		if (!$person_id){
+		if ( ! $person_id ) {
 			$person_id = get_the_ID();
 		}
 		while ( have_rows( 'departments', $person_id ) ) { // the_post apparently doesn't set the right global variables, so we explicitly tell acf the post id
@@ -376,6 +377,7 @@ class ucf_people_directory_shortcode {
 				$return_weight = get_sub_field( 'weight' );
 			}
 		}
+
 		return $return_weight;
 	}
 
@@ -390,7 +392,7 @@ class ucf_people_directory_shortcode {
 		if ( $wp_query->have_posts() ) {
 			while ( $wp_query->have_posts() ) {
 				$wp_query->the_post();
-				$html_list_profiles .= self::profile($shortcode_attributes);
+				$html_list_profiles .= self::profile( $shortcode_attributes );
 
 			}
 		} else {
@@ -398,6 +400,7 @@ class ucf_people_directory_shortcode {
 		}
 
 		$html_list_profiles .= "</div>";
+
 		return $html_list_profiles;
 	}
 
@@ -409,7 +412,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function profile($shortcode_attributes) {
+	static public function profile( $shortcode_attributes ) {
 		$html_single_profile = ''; //return data
 
 		// #### set variables used in html output
@@ -437,9 +440,9 @@ class ucf_people_directory_shortcode {
 		$div_email    = self::contact_info( $email, 'email', "mailto:{$email}" );
 		$div_phone    = self::contact_info( $phone, 'phone', "tel:{$phone}" );
 
-		$weight = self::acf_weight_for_category($shortcode_attributes->weighted_category_id, get_the_ID());
+		$weight = self::acf_weight_for_category( $shortcode_attributes->weighted_category_id, get_the_ID() );
 
-		if ($weight) {
+		if ( $weight ) {
 			$weight_class = " weight-{$weight}";
 		} else {
 			$weight_class = "";
@@ -551,12 +554,11 @@ class ucf_people_directory_shortcode {
 
 
 		$people_group_list_html = self::people_group_list_html( $shortcode_attributes );
-
 		$html_people_groups .= "
             <div class='people_groups'>
                 <h3 class='title yellow_underline'>Filter by</h3>
                 <div class='list'>
-                    <ul id='menu-directory-departments' class='menu'>
+                    <ul id='{$shortcode_attributes->directory_id}' class='menu'>
                         {$people_group_list_html}
                     </ul>
                 </div>
@@ -575,6 +577,7 @@ class ucf_people_directory_shortcode {
 	 */
 	static public function people_group_list_html( $shortcode_attributes ) {
 		$html_people_group_list = '';
+
 		$current_page_url       = wp_get_canonical_url();
 
 		$current_term = $shortcode_attributes->people_group_slug;
@@ -587,6 +590,7 @@ class ucf_people_directory_shortcode {
 		if ( sizeof( $shortcode_attributes->editor_people_groups ) > 0 ) {
 			$get_terms_arguments[ 'include' ] = $shortcode_attributes->editor_people_groups_ids; // only include terms specified by the editor
 		} else {
+			// editor wants a global directory (no categories specified)
 			$get_terms_arguments[ 'parent' ] = 0; // only show top level groups - we'll get the children later for formatting
 		}
 
@@ -599,13 +603,6 @@ class ucf_people_directory_shortcode {
 		foreach ( $people_groups_terms_top_level->terms as $top_level_term ) {
 			/* @var $top_level_term  WP_Term */
 
-			// list the parent
-			if ( $current_term == $top_level_term->slug ) {
-				$html_people_group_list .= self::term_list_entry( $top_level_term->name, $current_page_url, $top_level_term->slug, 'parent active' );
-			} else {
-				$html_people_group_list .= self::term_list_entry( $top_level_term->name, $current_page_url, $top_level_term->slug, 'parent' );
-			}
-
 			$people_groups_terms_children = get_terms(
 				array(
 					'taxonomy'   => self::taxonomy_name,
@@ -614,15 +611,23 @@ class ucf_people_directory_shortcode {
 				)
 			);
 
-			foreach ( $people_groups_terms_children as $child_term ) {
-				// list the children. set class to child so it can be formatted differently
-				if ( $current_term == $child_term->slug ) {
-					$html_people_group_list .= self::term_list_entry( $child_term->name, $current_page_url, $child_term->slug, 'child active' );
-				} else {
-					$html_people_group_list .= self::term_list_entry( $child_term->name, $current_page_url, $child_term->slug, 'child' );
-				}
+			if ( sizeof( $people_groups_terms_children ) > 0 ) {
+				// term has children. make the top term an accordion, with the first inner element pointing to the parent filter. rest of elements are children filters
+				$html_people_group_list .= self::term_list_entry_with_children($top_level_term, $current_page_url, $current_term, $people_groups_terms_children, $shortcode_attributes);
 
+
+
+			} else {
+				// term is a loner. just make it a filter link, no accordion.
+				// list the parent
+				if ( $current_term == $top_level_term->slug ) {
+					$html_people_group_list .= self::term_list_entry( $top_level_term->name, $current_page_url, $top_level_term->slug, 'parent active' );
+				} else {
+					$html_people_group_list .= self::term_list_entry( $top_level_term->name, $current_page_url, $top_level_term->slug, 'parent' );
+				}
 			}
+
+
 		}
 
 		return $html_people_group_list;
@@ -656,6 +661,51 @@ class ucf_people_directory_shortcode {
                     </a>
                 </li>
             ";
+	}
+
+	static public function term_list_entry_with_children( $top_level_term, $current_page_url, $current_term, $people_groups_terms_children, $shortcode_attributes ) {
+		$return_accordion_html = "";
+		$accordion_collapsible_content_html = "";
+		$collapsed = true;
+
+		// list the parent
+		if ( $current_term == $top_level_term->slug ) {
+			$accordion_collapsible_content_html .= self::term_list_entry( "All " . $top_level_term->name, $current_page_url, $top_level_term->slug, 'parent active' );
+			$collapsed = false;
+		} else {
+			$accordion_collapsible_content_html .= self::term_list_entry( "All " . $top_level_term->name, $current_page_url, $top_level_term->slug, 'parent' );
+		}
+
+		foreach ( $people_groups_terms_children as $child_term ) {
+			// list the children. set class to child so it can be formatted differently
+			if ( $current_term == $child_term->slug ) {
+				$accordion_collapsible_content_html .= self::term_list_entry( $child_term->name, $current_page_url, $child_term->slug, 'child active' );
+				$collapsed = false;
+			} else {
+				$accordion_collapsible_content_html .= self::term_list_entry( $child_term->name, $current_page_url, $child_term->slug, 'child' );
+			}
+
+		}
+		if ($collapsed) {
+			$collapse_class = "collapse";
+		} else {
+			$collapse_class = "collapse show";
+		}
+
+		$return_accordion_html .= "
+<li class='menu-item-collapse' id='heading-{$top_level_term->slug}'>
+    <a data-toggle='collapse' href='#collapse-{$top_level_term->slug}' aria-expanded='true' aria-controls='collapse-{$top_level_term->slug}'>
+        {$top_level_term->name}
+    </a>
+	<div id='collapse-{$top_level_term->slug}' class='{$collapse_class}' role='tabpanel' aria-labelledby='heading-{$top_level_term->slug}' data-parent='#{$shortcode_attributes->directory_id}'>
+		<ul>
+		{$accordion_collapsible_content_html}
+		</ul>
+	</div>
+</li>
+    ";
+
+		return $return_accordion_html;
 	}
 
 	// ############ Subcategories End
@@ -726,6 +776,9 @@ class ucf_people_directory_shortcode_attributes {
 	/** @var integer number of people to show per page */
 	public $posts_per_page = ucf_people_directory_shortcode::posts_per_page;
 
+	/** @var string|void collision prevention - generate random bytes to prevent multiple directory blocks on the same page from having the same #id */
+	public $directory_id;
+
 	public function __construct() {
 		$this->show_search_bar = ( get_field( 'show_search_bar' ) || get_field( 'show_search_bar' ) === null );
 		$this->initialize_editor_specified_groups();
@@ -746,6 +799,7 @@ class ucf_people_directory_shortcode_attributes {
 		$this->posts_per_page            = ( get_field( 'profiles_per_page' ) ? get_field( 'profiles_per_page' ) : ucf_people_directory_shortcode::posts_per_page );
 		$this->show_group_filter_sidebar = ( get_field( 'show_group_filter_sidebar' ) || get_field( 'show_group_filter_sidebar' ) === null );
 
+		$this->directory_id = "menu-directory-departments-" . bin2hex(random_bytes(8)); // prevent #id collisions by generating a different id for each directory block. changes on each page load, but it isn't referenced in css.
 	}
 
 	/**
@@ -817,16 +871,16 @@ class ucf_people_directory_shortcode_attributes {
 	 * Otherwise, weights are not taken into account.
 	 */
 	protected function initialize_weighted_category() {
-		if ($this->people_group_slug){
+		if ( $this->people_group_slug ) {
 			$this->weighted_category_slug = $this->people_group_slug;
-			$this->weighted_category_id = get_term_by( 'slug', $this->weighted_category_slug, ucf_people_directory_shortcode::taxonomy_name )->term_id;
+			$this->weighted_category_id   = get_term_by( 'slug', $this->weighted_category_slug, ucf_people_directory_shortcode::taxonomy_name )->term_id;
 
-		} elseif (sizeof( $this->editor_people_groups ) === 1) {
-			$this->weighted_category_slug = $this->editor_people_groups[0];
-			$this->weighted_category_id = get_term_by( 'slug', $this->weighted_category_slug, ucf_people_directory_shortcode::taxonomy_name )->term_id;
+		} elseif ( sizeof( $this->editor_people_groups ) === 1 ) {
+			$this->weighted_category_slug = $this->editor_people_groups[ 0 ];
+			$this->weighted_category_id   = get_term_by( 'slug', $this->weighted_category_slug, ucf_people_directory_shortcode::taxonomy_name )->term_id;
 		} else {
 			$this->weighted_category_slug = null;
-			$this->weighted_category_id = null;
+			$this->weighted_category_id   = null;
 		}
 	}
 }
