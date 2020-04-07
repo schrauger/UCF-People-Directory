@@ -73,7 +73,7 @@ class ucf_people_directory_shortcode {
 
 		//$replacement_data = ''; //string of html to return
 		// print out search bar
-		if ( $obj_shortcode_attributes->show_search_bar ) { // check for null for backwards compatibility
+		if ( $obj_shortcode_attributes->show_search_bar ) {
 			$obj_shortcode_attributes->replacement_data .= self::search_bar_html( $obj_shortcode_attributes );
 		}
 
@@ -81,9 +81,7 @@ class ucf_people_directory_shortcode {
 		if ( $obj_shortcode_attributes->show_contacts ) { // user has searched, or the user or page owner has specified a group. show the contacts.
 			$wp_query = self::query_profiles( $obj_shortcode_attributes );
 			// print out profiles
-			$obj_shortcode_attributes->replacement_data .= "<div class='profiles-list'>";
-			$obj_shortcode_attributes->replacement_data .= self::profiles_html( $wp_query );
-			$obj_shortcode_attributes->replacement_data .= "</div>";
+			$obj_shortcode_attributes->replacement_data .= self::profiles_html( $wp_query, $obj_shortcode_attributes );
 
 			wp_reset_postdata();
 		}
@@ -157,17 +155,11 @@ class ucf_people_directory_shortcode {
 	 * @return WP_Query
 	 */
 	static public function query_profiles( $shortcode_attributes ) {
-		global $wpdb;
 
-		$single_category = '';
-		if ( $shortcode_attributes->people_group_slug ) {
-			// user asked for a specific category. we now need to look for weighted people.
-			$single_category = $shortcode_attributes->people_group_slug;
-			$weighted_people = self::profiles_weighted_id_list( $single_category, $shortcode_attributes->search_by_name );
-		} elseif ( sizeof( $shortcode_attributes->editor_people_groups ) === 1 ) {
-			// the editor is showing one single department. we now need to look for weighted people.
-			$single_category = $shortcode_attributes->editor_people_groups[ 0 ];
-			$weighted_people = self::profiles_weighted_id_list( $single_category, $shortcode_attributes->search_by_name );
+		// ## Query 1 - Run if viewing a single category
+		if ( $shortcode_attributes->weighted_category_id ) {
+			// user asked for a specific category, or the editor is showing one single department. we now need to look for weighted people.
+			$weighted_people = self::profiles_weighted_id_list( $shortcode_attributes ); // Query 1
 		} else {
 			// user has not specified a category. weights don't come into effect, since we don't weight multi category views.
 			$weighted_people = [];
@@ -183,9 +175,10 @@ class ucf_people_directory_shortcode {
 			'order'          => 'ASC',
 		);
 
+		// ## Query 2 - Run if single category, and we found weighted people for that category.
 		if ( sizeof( $weighted_people > 0 ) ) {
 			// weighted people found. run another query to get EVERY person to create an array of ids.
-			$all_people              = self::profiles_id_list( $single_category, $shortcode_attributes->search_by_name );
+			$all_people              = self::profiles_id_list( $shortcode_attributes ); // Query 2
 			$correctly_sorted_people = array_merge( $weighted_people, $all_people );
 			$correctly_sorted_people = array_unique( $correctly_sorted_people );
 			// now only select those profiles, and in the order specified
@@ -207,11 +200,13 @@ class ucf_people_directory_shortcode {
 			);
 		}
 
+		// ## Query 3 - Always run. Optionally add results from previous two queries if they both ran.
+
 		// Now we have all profiles, with the correct weighted ones at the beginning.
 		// Finally, do a WP_QUERY, passing in our exact list of profiles, which will
 		// honor the sort we specify.
 
-		return new WP_Query( $query_args );
+		return new WP_Query( $query_args ); // Query 3
 	}
 
 	/**
@@ -220,13 +215,11 @@ class ucf_people_directory_shortcode {
 	 * or two people are at the top, then another group next, and finally everyone else in the
 	 * category.
 	 *
-	 * @param string $single_category_slug
-	 *
-	 * @param string $name_search
+	 * @param ucf_people_directory_shortcode_attributes $shortcode_attributes
 	 *
 	 * @return array
 	 */
-	static public function profiles_weighted_id_list( $single_category_slug, $name_search = null ) {
+	static public function profiles_weighted_id_list( $shortcode_attributes ) {
 		// first, find all profiles that have a 'head of department' or similar tag for the currently filtered department.
 		// sort by their weight. smaller numbers first.
 		$query_args = array(
@@ -236,7 +229,7 @@ class ucf_people_directory_shortcode {
 			'posts_per_page'   => - 1,
 			'post_type'        => 'person',
 			// 'person' is a post type defined in ucf-people-cpt
-			's'                => $name_search,
+			's'                => $shortcode_attributes->search_by_name,
 			'orderby'          => 'meta_value',
 			'meta_key'         => 'person_orderby_name',
 			// we still order by person name. if weights are equal, names should be sorted.
@@ -249,7 +242,7 @@ class ucf_people_directory_shortcode {
 				array(
 					'taxonomy'         => self::taxonomy_name,
 					'field'            => 'slug',
-					'terms'            => $single_category_slug,
+					'terms'            => $shortcode_attributes->weighted_category_slug,
 					'include_children' => true,
 					'operator'         => '='
 				)
@@ -263,7 +256,7 @@ class ucf_people_directory_shortcode {
 				array(
 					'key'     => 'departments_$_department',
 					'compare' => '=',
-					'value'   => get_term_by( 'slug', $single_category_slug, ucf_people_directory_shortcode::taxonomy_name )->term_id,
+					'value'   => $shortcode_attributes->weighted_category_id,
 					// acf stores taxonomy by id within the database backend, so convert the user slug to id
 				),
 				array(
@@ -287,20 +280,13 @@ class ucf_people_directory_shortcode {
 		// sort by the orderby_name field after.
 
 		$weighted_array     = [];
-		$single_category_id = get_term_by( 'slug', $single_category_slug, ucf_people_directory_shortcode::taxonomy_name )->term_id;
+		$single_category_id = $shortcode_attributes->weighted_category_id;
 		if ( $wp_query->have_posts() ) {
 			while ( $wp_query->have_posts() ) {
 				$wp_query->the_post();
+				$person_id = get_the_ID();
 				// get the matching weight for our category
-				while ( have_rows( 'departments', get_the_ID() ) ) { // the_post apparently doesn't set the right global variables, so we explicitly tell acf the post id
-					the_row();
-					$department = get_sub_field( 'department' );
-					if ( $department === $single_category_id ) {
-						// found the matching weight
-						$weighted_array[ get_the_ID() ] = get_sub_field( 'weight' );
-						break;
-					}
-				}
+				$weighted_array[ $person_id ] = self::acf_weight_for_category($single_category_id, $person_id);
 			}
 		}
 
@@ -314,19 +300,15 @@ class ucf_people_directory_shortcode {
 	/**
 	 * Gets an ordered list of profile ids, unsorted.
 	 *
-	 * @param string $single_category_slug
-	 *
-	 * @param string $name_search
+	 * @param ucf_people_directory_shortcode_attributes $shortcode_attributes
 	 *
 	 * @return array
 	 */
-	static public function profiles_id_list( $single_category_slug, $name_search = null ) {
-		global $wpdb;
-
+	static public function profiles_id_list( $shortcode_attributes ) {
 		$query_args = array(
 			'posts_per_page' => - 1,
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
-			's'              => $name_search,
+			's'              => $shortcode_attributes->search_by_name,
 			'orderby'        => 'meta_value',
 			'meta_key'       => 'person_orderby_name',
 			'order'          => 'ASC',
@@ -339,7 +321,7 @@ class ucf_people_directory_shortcode {
 				array(
 					'taxonomy'         => self::taxonomy_name,
 					'field'            => 'slug',
-					'terms'            => $single_category_slug,
+					'terms'            => $shortcode_attributes->weighted_category_slug,
 					'include_children' => true,
 					'operator'         => '='
 				)
@@ -368,30 +350,59 @@ class ucf_people_directory_shortcode {
 	}
 
 	/**
+	 * Returns the weight, if any, for the specified category and the specified or current person.
+	 * @param int $category_id ID (not slug) of the category-specific weight to look for
+	 * @param int|null $person_id Person profile to look for. If unspecified, uses current post.
+	 *
+	 * @return integer
+	 */
+	static public function acf_weight_for_category(  $category_id, $person_id = null ) {
+		$return_weight = null;
+		if (!$person_id){
+			$person_id = get_the_ID();
+		}
+		while ( have_rows( 'departments', $person_id ) ) { // the_post apparently doesn't set the right global variables, so we explicitly tell acf the post id
+			the_row();
+			$department = get_sub_field( 'department' );
+			if ( $department === $category_id ) {
+				// found the matching weight
+				$return_weight = get_sub_field( 'weight' );
+			}
+		}
+		return $return_weight;
+	}
+
+	/**
 	 * @param $wp_query WP_Query
 	 *
 	 * @return string
 	 */
-	static public function profiles_html( $wp_query ) {
-		$html_list_profiles = "";
+	static public function profiles_html( $wp_query, $shortcode_attributes ) {
+		$html_list_profiles = "<div class='profiles-list'>";
 
 		if ( $wp_query->have_posts() ) {
 			while ( $wp_query->have_posts() ) {
 				$wp_query->the_post();
-				$html_list_profiles .= self::profile();
+				$html_list_profiles .= self::profile($shortcode_attributes);
 
 			}
 		} else {
 			$html_list_profiles .= "<div class='no-results'>No results found.</div>";
 		}
 
+		$html_list_profiles .= "</div>";
 		return $html_list_profiles;
 	}
 
 	/**
 	 * Call this function after the_post is set to a profile (called within a loop)
 	 */
-	static public function profile() {
+	/**
+	 * @param ucf_people_directory_shortcode_attributes $shortcode_attributes
+	 *
+	 * @return string
+	 */
+	static public function profile($shortcode_attributes) {
 		$html_single_profile = ''; //return data
 
 		// #### set variables used in html output
@@ -419,10 +430,18 @@ class ucf_people_directory_shortcode {
 		$div_email    = self::contact_info( $email, 'email', "mailto:{$email}" );
 		$div_phone    = self::contact_info( $phone, 'phone', "tel:{$phone}" );
 
+		$weight = self::acf_weight_for_category($shortcode_attributes->weighted_category_id, get_the_ID());
+
+		if ($weight) {
+			$weight_class = " weight-{$weight}";
+		} else {
+			$weight_class = "";
+		}
+
 		// ####
 
 		$html_single_profile .= "
-        <div class='person'>
+        <div class='person {$weight_class}'>
             <div class='photo'>
                 <a href='{$profile_url}' title='{$full_name}' style='background: url({$image_url}) no-repeat center center; background-size: cover;'>
                     {$full_name}
@@ -685,6 +704,12 @@ class ucf_people_directory_shortcode_attributes {
 	/** @var string user specified people groups slug to filter. user overrides editor. if empty, show editor people groups */
 	public $people_group_slug = '';
 
+	/** @var string Calculated. If user entered a category, use that. Else if editor has a single category, use that. Else, null. */
+	public $weighted_category_slug = '';
+
+	/** @var string Calculated. If user entered a category, use that. Else if editor has a single category, use that. Else, null. */
+	public $weighted_category_id = '';
+
 	/** @var string user specified search string */
 	public $search_by_name = '';
 
@@ -698,6 +723,7 @@ class ucf_people_directory_shortcode_attributes {
 		$this->show_search_bar = ( get_field( 'show_search_bar' ) || get_field( 'show_search_bar' ) === null );
 		$this->initialize_editor_specified_groups();
 		$this->initialize_user_specified_people_groups();
+		$this->initialize_weighted_category();
 		$this->search_by_name = ( get_query_var( ucf_people_directory_shortcode::GET_param_name ) ) ? get_query_var( ucf_people_directory_shortcode::GET_param_name ) : '';
 
 		if ( ( $this->people_group_slug != '' ) || ( $this->search_by_name != '' ) ) { // user has searched, or the user or page owner has specified a group. show the contacts.
@@ -773,6 +799,27 @@ class ucf_people_directory_shortcode_attributes {
 		} else {
 			// user didn't specify a group, so show all the groups that the editor defined for this page
 			$this->people_group_slug = null;
+		}
+	}
+
+	/**
+	 * Determine which category, if any, will be checked against for weighted profiles.
+	 * If the user specified a category, use that choice.
+	 * If no filter is active, but the page editor defined exactly one category to be shown,
+	 * then use that category.
+	 * Otherwise, weights are not taken into account.
+	 */
+	protected function initialize_weighted_category() {
+		if ($this->people_group_slug){
+			$this->weighted_category_slug = $this->people_group_slug;
+			$this->weighted_category_id = get_term_by( 'slug', $this->weighted_category_slug, ucf_people_directory_shortcode::taxonomy_name )->term_id;
+
+		} elseif (sizeof( $this->editor_people_groups ) === 1) {
+			$this->weighted_category_slug = $this->editor_people_groups[0];
+			$this->weighted_category_id = get_term_by( 'slug', $this->weighted_category_slug, ucf_people_directory_shortcode::taxonomy_name )->term_id;
+		} else {
+			$this->weighted_category_slug = null;
+			$this->weighted_category_id = null;
 		}
 	}
 }
