@@ -688,15 +688,19 @@ class ucf_people_directory_shortcode {
 		}
 		if ($collapsed) {
 			$collapse_class = "collapse";
+			$angle_class = "fa-angle-down";
 		} else {
 			$collapse_class = "collapse show";
+			$angle_class = "fa-angle-up";
 		}
 
 		$return_accordion_html .= "
 <li class='menu-item-collapse' id='heading-{$top_level_term->slug}'>
     <a data-toggle='collapse' href='#collapse-{$top_level_term->slug}' aria-expanded='true' aria-controls='collapse-{$top_level_term->slug}'>
         {$top_level_term->name}
+        <i class='fa {$angle_class}'></i>
     </a>
+    
 	<div id='collapse-{$top_level_term->slug}' class='{$collapse_class}' role='tabpanel' aria-labelledby='heading-{$top_level_term->slug}' data-parent='#{$shortcode_attributes->directory_id}'>
 		<ul>
 		{$accordion_collapsible_content_html}
