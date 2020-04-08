@@ -596,9 +596,9 @@ class ucf_people_directory_shortcode {
 
 		$people_groups_terms_top_level = new WP_Term_Query( $get_terms_arguments );
 		if ( ! $current_term ) {
-			$html_people_group_list .= self::term_list_entry( "All groups", $current_page_url, null, 'reset active' );
+			$html_people_group_list .= self::term_list_entry( "All Groups", $current_page_url, null, 'reset active' );
 		} else {
-			$html_people_group_list .= self::term_list_entry( "All groups", $current_page_url, null, 'reset' );
+			$html_people_group_list .= self::term_list_entry( "All Groups", $current_page_url, null, 'reset' );
 		}
 		foreach ( $people_groups_terms_top_level->terms as $top_level_term ) {
 			/* @var $top_level_term  WP_Term */

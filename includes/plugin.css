@@ -60,8 +60,11 @@ Individual contact listing within staff directory
       padding: 10px 0;
       list-style: none;
       margin-left: -40px; }
-      .people_groups .list li.child {
+      .people_groups .list li ul li.child, .people_groups .list li ul li.parent {
         padding-left: 20px; }
+      .people_groups .list li ul li:last-child {
+        border-bottom: none;
+        padding-bottom: 0; }
       .people_groups .list li.active {
         font-weight: bold; }
 
