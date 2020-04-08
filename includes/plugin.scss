@@ -138,6 +138,10 @@ Individual contact listing within staff directory
 			float: none;
 			margin-top: 25px;
 			width: 100%;
+
+			.menu {
+				column-count: 3;
+			}
 		}
 	}
 }
