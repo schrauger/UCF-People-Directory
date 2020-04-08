@@ -81,7 +81,7 @@ Individual contact listing within staff directory
   .ucf-people-directory.no-card-view .people_groups .menu {
     column-count: 3; }
     .ucf-people-directory.no-card-view .people_groups .menu .collapse {
-      display: block; }
+      display: block !important; }
 
 .pagination {
   clear: both;
