@@ -61,7 +61,8 @@ Individual contact listing within staff directory
       border-bottom: solid 1px #f0f0f0;
       padding: 10px 0;
       list-style: none;
-      margin-left: -40px; }
+      margin-left: -40px;
+      width: 90%; }
       .ucf-people-directory .people_groups .list li ul li.child, .ucf-people-directory .people_groups .list li ul li.parent {
         padding-left: 20px; }
       .ucf-people-directory .people_groups .list li ul li:last-child {
@@ -79,6 +80,8 @@ Individual contact listing within staff directory
   width: 100%; }
   .ucf-people-directory.no-card-view .people_groups .menu {
     column-count: 3; }
+    .ucf-people-directory.no-card-view .people_groups .menu .collapse {
+      display: block; }
 
 .pagination {
   clear: both;
