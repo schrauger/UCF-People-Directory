@@ -688,15 +688,17 @@ class ucf_people_directory_shortcode {
 		}
 		if ($collapsed) {
 			$collapse_class = "collapse";
+			$expanded = "false";
 			$angle_class = "fa-angle-down";
 		} else {
 			$collapse_class = "collapse show";
 			$angle_class = "fa-angle-up";
+			$expanded = "true";
 		}
 
 		$return_accordion_html .= "
 <li class='menu-item-collapse' id='heading-{$top_level_term->slug}'>
-    <a data-toggle='collapse' href='#collapse-{$top_level_term->slug}' aria-expanded='true' aria-controls='collapse-{$top_level_term->slug}'>
+    <a data-toggle='collapse' href='#collapse-{$top_level_term->slug}' aria-expanded='{$expanded}' aria-controls='collapse-{$top_level_term->slug}'>
         {$top_level_term->name}
         <i class='fa {$angle_class}'></i>
     </a>
@@ -763,13 +765,13 @@ class ucf_people_directory_shortcode_attributes {
 	public $editor_people_groups_ids = [];
 
 	/** @var string user specified people groups slug to filter. user overrides editor. if empty, show editor people groups */
-	public $people_group_slug = '';
+	public $people_group_slug;
 
 	/** @var string Calculated. If user entered a category, use that. Else if editor has a single category, use that. Else, null. */
-	public $weighted_category_slug = '';
+	public $weighted_category_slug;
 
 	/** @var string Calculated. If user entered a category, use that. Else if editor has a single category, use that. Else, null. */
-	public $weighted_category_id = '';
+	public $weighted_category_id;
 
 	/** @var string user specified search string */
 	public $search_by_name = '';
@@ -783,6 +785,10 @@ class ucf_people_directory_shortcode_attributes {
 	/** @var string|void collision prevention - generate random bytes to prevent multiple directory blocks on the same page from having the same #id */
 	public $directory_id;
 
+	/**
+	 * ucf_people_directory_shortcode_attributes constructor.
+	 * Initializes all values with safe and logical values, based on user input, editor preferences, and logical deductions.
+	 */
 	public function __construct() {
 		$this->show_search_bar = ( get_field( 'show_search_bar' ) || get_field( 'show_search_bar' ) === null );
 		$this->initialize_editor_specified_groups();
