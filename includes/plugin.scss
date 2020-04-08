@@ -23,6 +23,10 @@ Individual contact listing within staff directory
 		border : solid 1px #ddd;
 		margin: 0 0 25px 0;
 
+		&.weighted {
+			background: #f7f7f7;
+		}
+
 		div.photo {
 			width: 200px;
 			height: 200px;
@@ -135,6 +139,7 @@ Individual contact listing within staff directory
 	.profiles-list {
 		.person {
 			flex-wrap: wrap !important;
+
 			.photo {
 				width: 100% !important;
 

@@ -443,7 +443,7 @@ class ucf_people_directory_shortcode {
 		$weight = self::acf_weight_for_category( $shortcode_attributes->weighted_category_id, get_the_ID() );
 
 		if ( $weight ) {
-			$weight_class = " weight-{$weight}";
+			$weight_class = "weighted weight-{$weight}";
 		} else {
 			$weight_class = "";
 		}
