@@ -100,6 +100,7 @@ Individual contact listing within staff directory
 				padding: 10px 0;
 				list-style: none;
 	    		margin-left: -40px;
+	    		width: 90%;
 
 	    		ul {
 
@@ -147,6 +148,10 @@ Individual contact listing within staff directory
 
 			.menu {
 				column-count: 3;
+
+				.collapse {
+					display: block !important;
+				}
 			}
 		}
 	}
