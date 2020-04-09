@@ -69,10 +69,15 @@ Individual contact listing within staff directory
         padding-bottom: 0; }
       .ucf-people-directory .people_groups .list li.active {
         font-weight: bold; }
+      .ucf-people-directory .people_groups .list li a i.fa-angle-down::before {
+        /* makes the "expand arrow" offset to the left of the parent filter */
+        width: 0;
+        display: inline-block;
+        position: relative;
+        left: -1em; }
       .ucf-people-directory .people_groups .list li a[aria-expanded="true"] .fa-angle-down {
         transform: rotate(180deg) scaleX(-1);
         transform-origin: center center; }
-
 .ucf-people-directory.no-card-view .people_groups {
   float: none;
   margin-top: 25px;
@@ -96,3 +101,5 @@ Individual contact listing within staff directory
       width: 100% !important; }
       .profiles-list .person .photo a {
         background-position: center -80px !important; } }
+
+/*# sourceMappingURL=plugin.css.map */

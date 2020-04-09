@@ -697,8 +697,7 @@ class ucf_people_directory_shortcode {
 		$return_accordion_html .= "
 <li class='menu-item-collapse' id='heading-{$top_level_term->slug}'>
     <a data-toggle='collapse' href='#collapse-{$top_level_term->slug}' aria-expanded='{$expanded}' aria-controls='collapse-{$top_level_term->slug}'>
-        {$top_level_term->name}
-        <i class='fa fa-angle-down'></i>
+        <i class='fa fa-angle-down'></i>{$top_level_term->name}
     </a>
     
 	<div id='collapse-{$top_level_term->slug}' class='{$collapse_class}' role='tabpanel' aria-labelledby='heading-{$top_level_term->slug}' data-parent='#{$shortcode_attributes->directory_id}'>
