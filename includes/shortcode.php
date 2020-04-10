@@ -89,15 +89,17 @@ class ucf_people_directory_shortcode {
 
 		$wp_query = null;
 		if ( $obj_shortcode_attributes->show_contacts ) { // user has searched, or the user or page owner has specified a group. show the contacts.
-			$transient_data = get_transient( $obj_shortcode_attributes->transient_name );
+			$transient_data = get_transient( $obj_shortcode_attributes->transient_name_cards );
 			if ( $transient_data ) {
 				$obj_shortcode_attributes->replacement_data .= $transient_data;
+				$wp_query                                   = get_transient( $obj_shortcode_attributes->transient_name_wp_query );
 			} else {
 				$wp_query = self::query_profiles( $obj_shortcode_attributes );
 				// print out profiles
 				$fresh_data                                 = self::profiles_html( $wp_query, $obj_shortcode_attributes );
 				$obj_shortcode_attributes->replacement_data .= $fresh_data;
-				set_transient( $obj_shortcode_attributes->transient_name, $fresh_data, 60 * 60 * 24 * 30 ); // one month expiration. will also expire when any person is added/updated
+				set_transient( $obj_shortcode_attributes->transient_name_cards, $fresh_data, 60 * 60 * 24 * 30 ); // one month expiration. will also expire when any person is added/updated
+				set_transient( $obj_shortcode_attributes->transient_name_wp_query, $wp_query, 60 * 60 * 24 * 30 );
 			}
 
 			wp_reset_postdata();
@@ -848,9 +850,6 @@ class ucf_people_directory_shortcode {
 	 * so when it changes, WordPress will try to access a brand new transient name which
 	 * doesn't exist yet, and all the old names stop being used.
 	 *
-	 * @param integer $post_id
-	 * @param WP_Post $post
-	 *
 	 * @throws Exception
 	 */
 	static function cache_bust_on_person_edit() {
@@ -907,7 +906,12 @@ class ucf_people_directory_shortcode_attributes {
 	 * @var string transient name for the card view of the current directory, based on name search, page, category, and
 	 *      a cache buster that changes whenever a profile changes
 	 */
-	public $transient_name;
+	public $transient_name_cards;
+
+	/**
+	 * @var string transient name for the wp_query, used for pagination
+	 */
+	public $transient_name_wp_query;
 
 	/**
 	 * ucf_people_directory_shortcode_attributes constructor.
@@ -1028,7 +1032,7 @@ class ucf_people_directory_shortcode_attributes {
 	 */
 	protected function set_transient_name() {
 		if ( ! $this->show_contacts ) {
-			$this->transient_name = '';
+			$this->transient_name_cards = '';
 
 			return; // transient is only for contacts. if this current view doesn't show contacts, there's no transient.
 		}
@@ -1054,15 +1058,16 @@ class ucf_people_directory_shortcode_attributes {
 		 * "ucf-pd-"(md5){"enterprise-german-page1-20people-unique24425"}
 		 */
 		// because transient names are limited, everything besides the plugin name is hashed.
-		$transient_name = 'ucf-pd-'; // prefix with semi-readable name, so we can at least see in the database that these transients belong to this plugin
+		$transient_name_prefix = 'ucf-pd-'; // prefix with semi-readable name, so we can at least see in the database that these transients belong to this plugin
 		if ( $this->weighted_category_slug ) {
 			$category = $this->weighted_category_slug;
 		} else {
 			$category = implode( "+", $this->editor_people_groups );
 		}
-		$transient_name .= md5( $category . $this->search_by_name . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value );
+		$transient_name = md5( $category . $this->search_by_name . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value );
 
-		$this->transient_name = substr( $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
+		$this->transient_name_cards    = substr( $transient_name_prefix . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
+		$this->transient_name_wp_query = substr( $transient_name_prefix . 'wpq-' . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
 	}
 }
 
