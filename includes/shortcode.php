@@ -237,46 +237,33 @@ class ucf_people_directory_shortcode {
 		return $return_query;
 	}
 
-	static public function override_sql_order_mysql($orderby){
-		echo "order is: " . $orderby;
-		//$orderby = 'COALESCE(wp_postmeta.meta_value, wp_posts.post_date) ASC';
-		$orderby = "-" . $orderby;
-		return $orderby;
-
-	}
-
+	/**
+	 * Alters the sort order. Allows people without a sort key set to be sorted alphabetically by title.
+	 * Note: this intermixes first name sorting with last name sorting. Not ideal.
+	 * For now, it forces those without a sort key (or an empty one) to be sorted AFTER those with one defined.
+	 * @param $orderby
+	 *
+	 * @return string
+	 */
 	static public function override_sql_order($orderby){
 		global $wpdb;
-		echo "order is: " . $orderby . "\n\r";
-		//$orderby = 'COALESCE(wp_postmeta.meta_value, wp_posts.post_date) ASC';
-		$order_terms = explode(",", $orderby);
-		//$table_columns = [];
 
-		// get a list of table columns without the ASC, DESC designation
-//		foreach ($order_terms as $term){
-//			$table_columns[] = explode(" ", $term)[0]; // note: assumes column will never have a space, and that the string is something like "table.col ASC"
-//		}
-		//$table_column = explode(" ", $order_terms[0])[0]; // note: assumes column will never have a space, and that the string is something like "table.col ASC"
 		$sort_key = self::acf_sort_key;
 		$sql_order_case = "
 			CASE
-				WHEN {$wpdb->postmeta}.meta_key <> '{$sort_key}' THEN {$wpdb->posts}.post_title
-				WHEN {$wpdb->postmeta}.meta_key = '{$sort_key}' THEN {$wpdb->postmeta}.meta_value
+				WHEN {$wpdb->postmeta}.meta_key <> '{$sort_key}' THEN CONCAT('2',{$wpdb->posts}.post_title)
+				WHEN {$wpdb->postmeta}.meta_key = '{$sort_key}' AND {$wpdb->postmeta}.meta_value = '' THEN CONCAT('2',{$wpdb->posts}.post_title)
+				WHEN {$wpdb->postmeta}.meta_key = '{$sort_key}' THEN CONCAT('1',{$wpdb->postmeta}.meta_value)
 			END ASC
 		";
 
-		// concatenate all the names, so that if one field is null or blank, the next field is used, causing the people to be intermixed by two separate fields
-		$sql_order_concat = "CONCAT (";
-		foreach ($order_terms as $term){
-			$sql_order_concat .= explode(" ", trim($term))[0] . ","; // note: assumes column will never have a space, and that the string is something like "table.col ASC"
-			echo "new partial order: " . $sql_order_concat . "\n\r";
-		}
-		$sql_order_concat = substr($sql_order_concat, 0, -1); // remove the last comma
-		$sql_order_concat .= ") ASC";
+		// sort order ends up being 2PostTitle and 1SortKey (via concat), so that sorting-wise those with a defined sort key are sorted before everyone who lacks that key.
+		// otherwise, we'd have issues of AALastnameDDFirstname, BBFirstNameZZLastName, CCLastNameAAFirstName - IE intermixed last and first name sorting, which is useless.
 
-		//$nulls_last = strrev(preg_replace(strrev('/ASC/'), strrev('IS NULL'),strrev($order_terms[0]), 1)); // replace the last occurrence of ASC (because the column might contain that string)
+		// We can't just extrapolate the first and last name from the post_title, either. Since the title may be something like Dr Firstname Middle1 Middle2 Lastname PHD MD SUFFIX.
+		// There's no way to know from that text what their actual last and first name are for sorting purposes.
+
 		$orderby = $sql_order_case;
-		echo "order is: " . $orderby;
 
 		return $orderby;
 
