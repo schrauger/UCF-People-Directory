@@ -126,6 +126,9 @@ Individual contact listing within staff directory
 				}
 
 				a {
+					.fa {
+						transition: 0.25s
+					}
 					i.fa-angle-down::before{ /* makes the "expand arrow" offset to the left of the parent filter */
 						width: 0;
 						display: inline-block;
@@ -134,7 +137,7 @@ Individual contact listing within staff directory
 					}
 					&[aria-expanded="true"] {
 						.fa-angle-down {
-							transform: rotate(180deg) scaleX(-1);
+							transform: scaleY(-1);
 							transform-origin: center center;
 						}
 					}
