@@ -651,9 +651,19 @@ class ucf_people_directory_shortcode {
 
 		$people_groups_terms_top_level = new WP_Term_Query( $get_terms_arguments );
 		if ( ! $current_term ) {
-			$html_people_group_list .= self::term_list_entry( "All Groups", $current_page_url, null, 'reset active' );
+			if ($shortcode_attributes->show_contacts_on_unfiltered){
+				// only show the 'all groups' link on an unfiltered view if the editor is also showing contacts.
+				// otherwise, 'all groups' shouldn't be shown, as it's confusing to have a link to 'all groups' but then not see any contacts when clicked.
+				$html_people_group_list .= self::term_list_entry( "All Groups", $current_page_url, null, 'reset active' );
+			} else {
+				// don't need an else. if no current term, we're on unfiltered. and editor doesn't want cards shown. so don't print out either 'all groups' or 'reset filters'
+			}
 		} else {
-			$html_people_group_list .= self::term_list_entry( "All Groups", $current_page_url, null, 'reset' );
+			if ($shortcode_attributes->show_contacts_on_unfiltered) {
+				$html_people_group_list .= self::term_list_entry( "All Groups", $current_page_url, null, 'reset' );
+			} else {
+				$html_people_group_list .= self::term_list_entry( "Reset Filters", $current_page_url, null, 'reset' );
+			}
 		}
 		foreach ( $people_groups_terms_top_level->terms as $top_level_term ) {
 			/* @var $top_level_term  WP_Term */
@@ -717,6 +727,15 @@ class ucf_people_directory_shortcode {
             ";
 	}
 
+	/**
+	 * @param $top_level_term
+	 * @param $current_page_url
+	 * @param $current_term
+	 * @param $people_groups_terms_children
+	 * @param ucf_people_directory_shortcode_attributes $shortcode_attributes
+	 *
+	 * @return string
+	 */
 	static public function term_list_entry_with_children( $top_level_term, $current_page_url, $current_term, $people_groups_terms_children, $shortcode_attributes ) {
 		$return_accordion_html              = "";
 		$accordion_collapsible_content_html = "";
@@ -748,13 +767,21 @@ class ucf_people_directory_shortcode {
 			$expanded       = "true";
 		}
 
+		if ($shortcode_attributes->show_contacts) {
+			$accordion_mode = "collapse";
+			$parent_href = "href='#collapse-{$top_level_term->slug}'";
+		} else {
+			$accordion_mode = "";
+			$parent_href = "";
+		}
+
 		$return_accordion_html .= "
 <li class='menu-item-collapse' id='heading-{$top_level_term->slug}'>
-    <a data-toggle='collapse' href='#collapse-{$top_level_term->slug}' aria-expanded='{$expanded}' aria-controls='collapse-{$top_level_term->slug}'>
+    <a data-toggle='{$accordion_mode}' $parent_href aria-expanded='{$expanded}' aria-controls='collapse-{$top_level_term->slug}'>
         <i class='fa fa-angle-down'></i>{$top_level_term->name}
     </a>
     
-	<div id='collapse-{$top_level_term->slug}' class='{$collapse_class}' role='tabpanel' aria-labelledby='heading-{$top_level_term->slug}' data-parent='#{$shortcode_attributes->directory_id}'>
+	<div id='collapse-{$top_level_term->slug}' class='{$collapse_class}' role='atabpanel' aria-labelledby='heading-{$top_level_term->slug}' data-parent='#{$shortcode_attributes->directory_id}'>
 		<ul>
 		{$accordion_collapsible_content_html}
 		</ul>
@@ -802,6 +829,9 @@ class ucf_people_directory_shortcode_attributes {
 
 	/** @var bool whether to show the actual contact cards or not */
 	public $show_contacts = false;
+
+	/** @var bool whether the editor wants unfiltered/initial views to show the contact cards */
+	public $show_contacts_on_unfiltered = false;
 
 	/** @var bool whether to show the sidebar with group filter links or not */
 	public $show_group_filter_sidebar = false;
@@ -855,6 +885,7 @@ class ucf_people_directory_shortcode_attributes {
 		// this defaults to false, as that's the default value for show_contacts.
 		if ( get_field( 'initially_shown' ) ) {
 			$this->show_contacts = true;
+			$this->show_contacts_on_unfiltered = true;
 		}
 
 		$this->paged                     = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1; //default to page 1;
