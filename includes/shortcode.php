@@ -201,14 +201,14 @@ class ucf_people_directory_shortcode {
 					'key'     => self::acf_sort_key,
 					'compare' => 'NOT EXISTS'
 				)
-			),
+			),*/
 			'orderby'        => array(
 				'meta_value' => 'ASC',
 				'title'      => 'ASC',
 				// fallback to title sort (first name, but oh well) if the sort field is missing.
-			),*/
+			),
 			'meta_key'       => self::acf_sort_key,
-			'order'          => 'ASC',
+			//'order'          => 'ASC',
 		);
 
 		// ## Query 2 - Run if single category, and we found weighted people for that category.
