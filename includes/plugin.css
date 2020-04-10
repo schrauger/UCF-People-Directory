@@ -86,6 +86,7 @@ Individual contact listing within staff directory
   .ucf-people-directory.no-card-view .people_groups .menu {
     column-count: 3; }
     .ucf-people-directory.no-card-view .people_groups .menu .collapse {
+      /* this breaks the collapse functionality - everything is visible even after collapsing the parent */
       display: block !important; }
 
 .pagination {

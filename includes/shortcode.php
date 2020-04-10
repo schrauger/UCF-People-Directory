@@ -12,6 +12,8 @@ class ucf_people_directory_shortcode {
 	const GET_param_group      = 'group_search'; // group or category person is in
 	const GET_param_name       = 'name_search'; // restrict to profiles matching the user text
 
+	const acf_sort_key         = 'person_orderby_name';
+
 	//    public function __construct() {
 	//        add_action( 'init', array( $this, 'add_shortcode' ) );
 	//        add_filter( 'query_vars', array( $this, 'add_query_vars_filter' ) ); // tell wordpress about new url parameters
@@ -86,6 +88,7 @@ class ucf_people_directory_shortcode {
 		$wp_query = null;
 		if ( $obj_shortcode_attributes->show_contacts ) { // user has searched, or the user or page owner has specified a group. show the contacts.
 			$wp_query = self::query_profiles( $obj_shortcode_attributes );
+			echo "<pre>" . $wp_query->request . "</pre>";
 			// print out profiles
 			$obj_shortcode_attributes->replacement_data .= self::profiles_html( $wp_query, $obj_shortcode_attributes );
 
@@ -177,13 +180,28 @@ class ucf_people_directory_shortcode {
 			'posts_per_page' => $shortcode_attributes->posts_per_page,
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
 			's'              => $shortcode_attributes->search_by_name,
-			'orderby'        => 'meta_value',
-			'meta_key'       => 'person_orderby_name',
-			'order'          => 'ASC',
+			'meta_query'     => array(
+				'relation' => 'OR', // need to have this meta query in order to allow people that lack this meta key to still be included in results
+				array(
+					'key' => self::acf_sort_key,
+					'compare' =>    'EXISTS'
+				),
+				array(
+					'key' => self::acf_sort_key,
+					'compare' =>    'NOT EXISTS'
+				)
+				// Gibson, Jane S.
+			),
+			'orderby'        => array(
+				'meta_value' => 'ASC',
+				'title' => 'ASC', // fallback to title sort (first name, but oh well) if the sort field is missing. note: this will
+			)
+			//			'meta_key'       => self::acf_sort_key,
+			//			'order'          => 'ASC',
 		);
 
 		// ## Query 2 - Run if single category, and we found weighted people for that category.
-		if ( sizeof( $weighted_people > 0 ) ) {
+		if ( sizeof( $weighted_people) > 0 ) {
 			// weighted people found. run another query to get EVERY person to create an array of ids.
 			$all_people              = self::profiles_id_list( $shortcode_attributes ); // Query 2
 			$correctly_sorted_people = array_merge( $weighted_people, $all_people );
@@ -212,8 +230,56 @@ class ucf_people_directory_shortcode {
 		// Now we have all profiles, with the correct weighted ones at the beginning.
 		// Finally, do a WP_QUERY, passing in our exact list of profiles, which will
 		// honor the sort we specify.
+		add_filter( 'posts_orderby', array('ucf_people_directory_shortcode','override_sql_order') );
+		$return_query = new WP_Query( $query_args ); // Query 3
+		remove_filter( 'posts_orderby', array('ucf_people_directory_shortcode','override_sql_order') );
 
-		return new WP_Query( $query_args ); // Query 3
+		return $return_query;
+	}
+
+	static public function override_sql_order_mysql($orderby){
+		echo "order is: " . $orderby;
+		//$orderby = 'COALESCE(wp_postmeta.meta_value, wp_posts.post_date) ASC';
+		$orderby = "-" . $orderby;
+		return $orderby;
+
+	}
+
+	static public function override_sql_order($orderby){
+		global $wpdb;
+		echo "order is: " . $orderby . "\n\r";
+		//$orderby = 'COALESCE(wp_postmeta.meta_value, wp_posts.post_date) ASC';
+		$order_terms = explode(",", $orderby);
+		//$table_columns = [];
+
+		// get a list of table columns without the ASC, DESC designation
+//		foreach ($order_terms as $term){
+//			$table_columns[] = explode(" ", $term)[0]; // note: assumes column will never have a space, and that the string is something like "table.col ASC"
+//		}
+		//$table_column = explode(" ", $order_terms[0])[0]; // note: assumes column will never have a space, and that the string is something like "table.col ASC"
+		$sort_key = self::acf_sort_key;
+		$sql_order_case = "
+			CASE
+				WHEN {$wpdb->postmeta}.meta_key <> '{$sort_key}' THEN {$wpdb->posts}.post_title
+				WHEN {$wpdb->postmeta}.meta_key = '{$sort_key}' THEN {$wpdb->postmeta}.meta_value
+			END ASC
+		";
+
+		// concatenate all the names, so that if one field is null or blank, the next field is used, causing the people to be intermixed by two separate fields
+		$sql_order_concat = "CONCAT (";
+		foreach ($order_terms as $term){
+			$sql_order_concat .= explode(" ", trim($term))[0] . ","; // note: assumes column will never have a space, and that the string is something like "table.col ASC"
+			echo "new partial order: " . $sql_order_concat . "\n\r";
+		}
+		$sql_order_concat = substr($sql_order_concat, 0, -1); // remove the last comma
+		$sql_order_concat .= ") ASC";
+
+		//$nulls_last = strrev(preg_replace(strrev('/ASC/'), strrev('IS NULL'),strrev($order_terms[0]), 1)); // replace the last occurrence of ASC (because the column might contain that string)
+		$orderby = $sql_order_case;
+		echo "order is: " . $orderby;
+
+		return $orderby;
+
 	}
 
 	/**
@@ -238,7 +304,7 @@ class ucf_people_directory_shortcode {
 			// 'person' is a post type defined in ucf-people-cpt
 			's'                => $shortcode_attributes->search_by_name,
 			'orderby'          => 'meta_value',
-			'meta_key'         => 'person_orderby_name',
+			'meta_key'         => self::acf_sort_key,
 			// we still order by person name. if weights are equal, names should be sorted.
 			'order'            => 'ASC',
 
@@ -317,7 +383,7 @@ class ucf_people_directory_shortcode {
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
 			's'              => $shortcode_attributes->search_by_name,
 			'orderby'        => 'meta_value',
-			'meta_key'       => 'person_orderby_name',
+			'meta_key'       => self::acf_sort_key,
 			'order'          => 'ASC',
 			'fields'         => 'ids', // only get a list of ids
 

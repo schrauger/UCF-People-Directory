@@ -149,7 +149,7 @@ Individual contact listing within staff directory
 			.menu {
 				column-count: 3;
 
-				.collapse {
+				.collapse { /* this breaks the collapse functionality - everything is visible even after collapsing the parent */
 					display: block !important;
 				}
 			}
