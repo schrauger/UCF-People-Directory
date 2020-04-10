@@ -88,7 +88,6 @@ class ucf_people_directory_shortcode {
 		$wp_query = null;
 		if ( $obj_shortcode_attributes->show_contacts ) { // user has searched, or the user or page owner has specified a group. show the contacts.
 			$wp_query = self::query_profiles( $obj_shortcode_attributes );
-			echo "<pre>" . $wp_query->request . "</pre>";
 			// print out profiles
 			$obj_shortcode_attributes->replacement_data .= self::profiles_html( $wp_query, $obj_shortcode_attributes );
 
