@@ -88,7 +88,7 @@ class ucf_people_directory_shortcode {
 		}
 
 		$wp_query = null;
-		if ( $obj_shortcode_attributes->show_contacts ) { // user has searched, or the user or page owner has specified a group. show the contacts.
+		if ( $obj_shortcode_attributes->show_contacts ) { // user has searched or selected a group, or the editor is showing contacts on initial/unfiltered view. show the contacts.
 			$transient_data = get_transient( $obj_shortcode_attributes->transient_name_cards );
 			if ( $transient_data ) {
 				$obj_shortcode_attributes->replacement_data .= $transient_data;
@@ -190,7 +190,7 @@ class ucf_people_directory_shortcode {
 			'posts_per_page' => $shortcode_attributes->posts_per_page,
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
 			's'              => $shortcode_attributes->search_by_name,
-			'meta_query'     => array(
+			/*'meta_query'     => array( // slow, but works for people that lack the sort key. profile migrator should have fixed that bug, though.
 				'relation' => 'OR',
 				// need to have this meta query in order to allow people that lack this meta key to still be included in results
 				array(
@@ -201,15 +201,14 @@ class ucf_people_directory_shortcode {
 					'key'     => self::acf_sort_key,
 					'compare' => 'NOT EXISTS'
 				)
-				// Gibson, Jane S.
 			),
 			'orderby'        => array(
 				'meta_value' => 'ASC',
 				'title'      => 'ASC',
-				// fallback to title sort (first name, but oh well) if the sort field is missing. note: this will
-			)
-			//			'meta_key'       => self::acf_sort_key,
-			//			'order'          => 'ASC',
+				// fallback to title sort (first name, but oh well) if the sort field is missing.
+			),*/
+			'meta_key'       => self::acf_sort_key,
+			'order'          => 'ASC',
 		);
 
 		// ## Query 2 - Run if single category, and we found weighted people for that category.
@@ -242,9 +241,14 @@ class ucf_people_directory_shortcode {
 		// Now we have all profiles, with the correct weighted ones at the beginning.
 		// Finally, do a WP_QUERY, passing in our exact list of profiles, which will
 		// honor the sort we specify.
-		add_filter( 'posts_orderby', array( 'ucf_people_directory_shortcode', 'override_sql_order' ) );
+
+		// removing this for now. causes query to run more slowly, and initial bug with missing field was fixed in profile migrator
+		//add_filter( 'posts_orderby', array( 'ucf_people_directory_shortcode', 'override_sql_order' ) );
+
 		$return_query = new WP_Query( $query_args ); // Query 3
-		remove_filter( 'posts_orderby', array( 'ucf_people_directory_shortcode', 'override_sql_order' ) );
+
+		// removing this for now. causes query to run more slowly, and initial bug with missing field was fixed in profile migrator
+		//remove_filter( 'posts_orderby', array( 'ucf_people_directory_shortcode', 'override_sql_order' ) );
 
 		return $return_query;
 	}
@@ -1074,10 +1078,8 @@ class ucf_people_directory_shortcode_attributes {
 //new ucf_people_directory_shortcode();
 
 add_action( 'init', array( 'ucf_people_directory_shortcode', 'add_shortcode' ) );
-add_filter( 'query_vars', array(
-	'ucf_people_directory_shortcode',
-	'add_query_vars_filter'
-) ); // tell wordpress about new url parameters
+add_filter( 'query_vars', array( 'ucf_people_directory_shortcode', 'add_query_vars_filter' ) );
+// tell wordpress about new url parameters
 
 // when a person is added or updated, change the cache-buster value to force directories to recompute
 // note: publish_person will run on both draft->publish and on publish->publish (ie saved updated data)
