@@ -1063,7 +1063,6 @@ class ucf_people_directory_shortcode_attributes {
 		$transient_name .= md5( $category . $this->search_by_name . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value );
 
 		$this->transient_name = substr( $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
-		echo $this->transient_name;
 	}
 }
 
