@@ -12,7 +12,7 @@ class ucf_people_directory_shortcode {
 	const GET_param_group      = 'group_search'; // group or category person is in
 	const GET_param_name       = 'name_search'; // restrict to profiles matching the user text
 
-	const acf_sort_key         = 'person_orderby_name';
+	const acf_sort_key = 'person_orderby_name';
 
 	//    public function __construct() {
 	//        add_action( 'init', array( $this, 'add_shortcode' ) );
@@ -181,27 +181,29 @@ class ucf_people_directory_shortcode {
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
 			's'              => $shortcode_attributes->search_by_name,
 			'meta_query'     => array(
-				'relation' => 'OR', // need to have this meta query in order to allow people that lack this meta key to still be included in results
+				'relation' => 'OR',
+				// need to have this meta query in order to allow people that lack this meta key to still be included in results
 				array(
-					'key' => self::acf_sort_key,
-					'compare' =>    'EXISTS'
+					'key'     => self::acf_sort_key,
+					'compare' => 'EXISTS'
 				),
 				array(
-					'key' => self::acf_sort_key,
-					'compare' =>    'NOT EXISTS'
+					'key'     => self::acf_sort_key,
+					'compare' => 'NOT EXISTS'
 				)
 				// Gibson, Jane S.
 			),
 			'orderby'        => array(
 				'meta_value' => 'ASC',
-				'title' => 'ASC', // fallback to title sort (first name, but oh well) if the sort field is missing. note: this will
+				'title'      => 'ASC',
+				// fallback to title sort (first name, but oh well) if the sort field is missing. note: this will
 			)
 			//			'meta_key'       => self::acf_sort_key,
 			//			'order'          => 'ASC',
 		);
 
 		// ## Query 2 - Run if single category, and we found weighted people for that category.
-		if ( sizeof( $weighted_people) > 0 ) {
+		if ( sizeof( $weighted_people ) > 0 ) {
 			// weighted people found. run another query to get EVERY person to create an array of ids.
 			$all_people              = self::profiles_id_list( $shortcode_attributes ); // Query 2
 			$correctly_sorted_people = array_merge( $weighted_people, $all_people );
@@ -230,9 +232,9 @@ class ucf_people_directory_shortcode {
 		// Now we have all profiles, with the correct weighted ones at the beginning.
 		// Finally, do a WP_QUERY, passing in our exact list of profiles, which will
 		// honor the sort we specify.
-		add_filter( 'posts_orderby', array('ucf_people_directory_shortcode','override_sql_order') );
+		add_filter( 'posts_orderby', array( 'ucf_people_directory_shortcode', 'override_sql_order' ) );
 		$return_query = new WP_Query( $query_args ); // Query 3
-		remove_filter( 'posts_orderby', array('ucf_people_directory_shortcode','override_sql_order') );
+		remove_filter( 'posts_orderby', array( 'ucf_people_directory_shortcode', 'override_sql_order' ) );
 
 		return $return_query;
 	}
@@ -241,14 +243,15 @@ class ucf_people_directory_shortcode {
 	 * Alters the sort order. Allows people without a sort key set to be sorted alphabetically by title.
 	 * Note: this intermixes first name sorting with last name sorting. Not ideal.
 	 * For now, it forces those without a sort key (or an empty one) to be sorted AFTER those with one defined.
+	 *
 	 * @param $orderby
 	 *
 	 * @return string
 	 */
-	static public function override_sql_order($orderby){
+	static public function override_sql_order( $orderby ) {
 		global $wpdb;
 
-		$sort_key = self::acf_sort_key;
+		$sort_key       = self::acf_sort_key;
 		$sql_order_case = "
 			CASE
 				WHEN {$wpdb->postmeta}.meta_key <> '{$sort_key}' THEN CONCAT('2',{$wpdb->posts}.post_title)
@@ -607,7 +610,7 @@ class ucf_people_directory_shortcode {
 
 
 		$people_group_list_html = self::people_group_list_html( $shortcode_attributes );
-		$html_people_groups .= "
+		$html_people_groups     .= "
             <div class='people_groups'>
                 <h3 class='title yellow_underline'>Filter by</h3>
                 <div class='list'>
@@ -631,7 +634,7 @@ class ucf_people_directory_shortcode {
 	static public function people_group_list_html( $shortcode_attributes ) {
 		$html_people_group_list = '';
 
-		$current_page_url       = wp_get_canonical_url();
+		$current_page_url = wp_get_canonical_url();
 
 		$current_term = $shortcode_attributes->people_group_slug;
 
@@ -666,8 +669,7 @@ class ucf_people_directory_shortcode {
 
 			if ( sizeof( $people_groups_terms_children ) > 0 ) {
 				// term has children. make the top term an accordion, with the first inner element pointing to the parent filter. rest of elements are children filters
-				$html_people_group_list .= self::term_list_entry_with_children($top_level_term, $current_page_url, $current_term, $people_groups_terms_children, $shortcode_attributes);
-
+				$html_people_group_list .= self::term_list_entry_with_children( $top_level_term, $current_page_url, $current_term, $people_groups_terms_children, $shortcode_attributes );
 
 
 			} else {
@@ -717,14 +719,14 @@ class ucf_people_directory_shortcode {
 	}
 
 	static public function term_list_entry_with_children( $top_level_term, $current_page_url, $current_term, $people_groups_terms_children, $shortcode_attributes ) {
-		$return_accordion_html = "";
+		$return_accordion_html              = "";
 		$accordion_collapsible_content_html = "";
-		$collapsed = true;
+		$collapsed                          = true;
 
 		// list the parent
 		if ( $current_term == $top_level_term->slug ) {
 			$accordion_collapsible_content_html .= self::term_list_entry( "All " . $top_level_term->name, $current_page_url, $top_level_term->slug, 'parent active' );
-			$collapsed = false;
+			$collapsed                          = false;
 		} else {
 			$accordion_collapsible_content_html .= self::term_list_entry( "All " . $top_level_term->name, $current_page_url, $top_level_term->slug, 'parent' );
 		}
@@ -733,18 +735,18 @@ class ucf_people_directory_shortcode {
 			// list the children. set class to child so it can be formatted differently
 			if ( $current_term == $child_term->slug ) {
 				$accordion_collapsible_content_html .= self::term_list_entry( $child_term->name, $current_page_url, $child_term->slug, 'child active' );
-				$collapsed = false;
+				$collapsed                          = false;
 			} else {
 				$accordion_collapsible_content_html .= self::term_list_entry( $child_term->name, $current_page_url, $child_term->slug, 'child' );
 			}
 
 		}
-		if ($collapsed) {
+		if ( $collapsed ) {
 			$collapse_class = "collapse";
-			$expanded = "false";
+			$expanded       = "false";
 		} else {
 			$collapse_class = "collapse show";
-			$expanded = "true";
+			$expanded       = "true";
 		}
 
 		$return_accordion_html .= "
@@ -837,7 +839,8 @@ class ucf_people_directory_shortcode_attributes {
 
 	/**
 	 * ucf_people_directory_shortcode_attributes constructor.
-	 * Initializes all values with safe and logical values, based on user input, editor preferences, and logical deductions.
+	 * Initializes all values with safe and logical values, based on user input, editor preferences, and logical
+	 * deductions.
 	 */
 	public function __construct() {
 		$this->show_search_bar = ( get_field( 'show_search_bar' ) || get_field( 'show_search_bar' ) === null );
@@ -859,7 +862,7 @@ class ucf_people_directory_shortcode_attributes {
 		$this->posts_per_page            = ( get_field( 'profiles_per_page' ) ? get_field( 'profiles_per_page' ) : ucf_people_directory_shortcode::posts_per_page );
 		$this->show_group_filter_sidebar = ( get_field( 'show_group_filter_sidebar' ) || get_field( 'show_group_filter_sidebar' ) === null );
 
-		$this->directory_id = "menu-directory-departments-" . bin2hex(random_bytes(8)); // prevent #id collisions by generating a different id for each directory block. changes on each page load, but it isn't referenced in css.
+		$this->directory_id = "menu-directory-departments-" . bin2hex( random_bytes( 8 ) ); // prevent #id collisions by generating a different id for each directory block. changes on each page load, but it isn't referenced in css.
 	}
 
 	/**
