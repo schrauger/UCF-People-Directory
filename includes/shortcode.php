@@ -508,7 +508,7 @@ class ucf_people_directory_shortcode {
 		$html_single_profile .= "
         <div class='person {$weight_class}'>
             <div class='photo'>
-                <a href='{$profile_url}' title='{$full_name}' style='background: url({$image_url}) no-repeat center center; background-size: cover;'>
+                <a href='{$profile_url}' title='{$full_name}' style='background-image: url({$image_url})'>
                     {$full_name}
                 </a>
             </div>
@@ -651,7 +651,7 @@ class ucf_people_directory_shortcode {
 
 		$people_groups_terms_top_level = new WP_Term_Query( $get_terms_arguments );
 		if ( ! $current_term ) {
-			if ($shortcode_attributes->show_contacts_on_unfiltered){
+			if ( $shortcode_attributes->show_contacts_on_unfiltered ) {
 				// only show the 'all groups' link on an unfiltered view if the editor is also showing contacts.
 				// otherwise, 'all groups' shouldn't be shown, as it's confusing to have a link to 'all groups' but then not see any contacts when clicked.
 				$html_people_group_list .= self::term_list_entry( "All Groups", $current_page_url, null, 'reset active' );
@@ -659,7 +659,7 @@ class ucf_people_directory_shortcode {
 				// don't need an else. if no current term, we're on unfiltered. and editor doesn't want cards shown. so don't print out either 'all groups' or 'reset filters'
 			}
 		} else {
-			if ($shortcode_attributes->show_contacts_on_unfiltered) {
+			if ( $shortcode_attributes->show_contacts_on_unfiltered ) {
 				$html_people_group_list .= self::term_list_entry( "All Groups", $current_page_url, null, 'reset' );
 			} else {
 				$html_people_group_list .= self::term_list_entry( "Reset Filters", $current_page_url, null, 'reset' );
@@ -728,10 +728,10 @@ class ucf_people_directory_shortcode {
 	}
 
 	/**
-	 * @param $top_level_term
-	 * @param $current_page_url
-	 * @param $current_term
-	 * @param $people_groups_terms_children
+	 * @param                                           $top_level_term
+	 * @param                                           $current_page_url
+	 * @param                                           $current_term
+	 * @param                                           $people_groups_terms_children
 	 * @param ucf_people_directory_shortcode_attributes $shortcode_attributes
 	 *
 	 * @return string
@@ -767,12 +767,14 @@ class ucf_people_directory_shortcode {
 			$expanded       = "true";
 		}
 
-		if ($shortcode_attributes->show_contacts) {
+		if ( $shortcode_attributes->show_contacts ) {
 			$accordion_mode = "collapse";
-			$parent_href = "href='#collapse-{$top_level_term->slug}'";
+			$parent_href    = "href='#collapse-{$top_level_term->slug}'";
 		} else {
 			$accordion_mode = "";
-			$parent_href = "";
+			$parent_href    = "";
+			$collapse_class = "collapse show";
+			$expanded       = "true";
 		}
 
 		$return_accordion_html .= "
@@ -884,7 +886,7 @@ class ucf_people_directory_shortcode_attributes {
 
 		// this defaults to false, as that's the default value for show_contacts.
 		if ( get_field( 'initially_shown' ) ) {
-			$this->show_contacts = true;
+			$this->show_contacts               = true;
 			$this->show_contacts_on_unfiltered = true;
 		}
 

@@ -25,7 +25,10 @@ Individual contact listing within staff directory
         width: 100%;
         text-indent: -9999px;
         display: block;
-        height: inherit; }
+        height: inherit;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-size: cover; }
     .profiles-list .person .details {
       flex: 0 0 75%;
       padding: 1rem; }
@@ -84,10 +87,8 @@ Individual contact listing within staff directory
   margin-top: 25px;
   width: 100%; }
   .ucf-people-directory.no-card-view .people_groups .menu {
-    column-count: 3; }
-    .ucf-people-directory.no-card-view .people_groups .menu .collapse {
-      /* this breaks the collapse functionality - everything is visible even after collapsing the parent */
-      display: block !important; }
+    column-count: auto;
+    column-width: 325px; }
 
 .pagination {
   clear: both;
@@ -100,10 +101,10 @@ Individual contact listing within staff directory
 
 @media (max-width: 999px) {
   .profiles-list .person {
-    flex-wrap: wrap !important; }
-    .profiles-list .person .photo {
-      width: 100% !important; }
-      .profiles-list .person .photo a {
-        background-position: center -80px !important; } }
+    flex-wrap: wrap; }
+    .profiles-list .person div.photo {
+      width: 100%; }
+      .profiles-list .person div.photo a {
+        background-position: center -80px; } }
 
 /*# sourceMappingURL=plugin.css.map */

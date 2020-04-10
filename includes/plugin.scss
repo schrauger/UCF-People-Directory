@@ -37,6 +37,9 @@ Individual contact listing within staff directory
 				text-indent: -9999px;
 				display: block;
 				height: inherit;
+				background-position: center center;
+				background-repeat: no-repeat;
+				background-size: cover;
 			}
 		}
 
@@ -147,11 +150,8 @@ Individual contact listing within staff directory
 			width: 100%;
 
 			.menu {
-				column-count: 3;
-
-				.collapse { /* this breaks the collapse functionality - everything is visible even after collapsing the parent */
-					display: block !important;
-				}
+				column-count: auto; // reduce number of columns based on width, so that it's mobile friendly
+				column-width: 325px; // 325px gives us 3 columns on most browsers, 2 on skinnier screens, and 1 on most mobile screens
 			}
 		}
 	}
@@ -173,13 +173,13 @@ Individual contact listing within staff directory
 
 	.profiles-list {
 		.person {
-			flex-wrap: wrap !important;
+			flex-wrap: wrap;
 
-			.photo {
-				width: 100% !important;
+			div.photo {
+				width: 100%;
 
 				a {
-					background-position: center -80px !important;
+					background-position: center -80px;
 				}
 			}
 		}
