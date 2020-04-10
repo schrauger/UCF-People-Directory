@@ -656,7 +656,12 @@ class ucf_people_directory_shortcode {
 				// otherwise, 'all groups' shouldn't be shown, as it's confusing to have a link to 'all groups' but then not see any contacts when clicked.
 				$html_people_group_list .= self::term_list_entry( "All Groups", $current_page_url, null, 'reset active' );
 			} else {
-				// don't need an else. if no current term, we're on unfiltered. and editor doesn't want cards shown. so don't print out either 'all groups' or 'reset filters'
+				if ($shortcode_attributes->search_by_name){
+					// show the reset filter link when a user searched by name.
+					$html_people_group_list .= self::term_list_entry( "Reset Filters", $current_page_url, null, 'reset' );
+				} else {
+					// don't need an else. if no current term, we're on unfiltered. and editor doesn't want cards shown. so don't print out either 'all groups' or 'reset filters'
+				}
 			}
 		} else {
 			if ( $shortcode_attributes->show_contacts_on_unfiltered ) {
