@@ -14,6 +14,8 @@ class ucf_people_directory_shortcode {
 
 	const acf_sort_key = 'person_orderby_name';
 
+	const transient_cache_buster_name = 'ucf-pd-cache-buster'; // the transient stored in the database with this name is simply a nonsenical value that is altered anytime a person is edited or added.
+
 	//    public function __construct() {
 	//        add_action( 'init', array( $this, 'add_shortcode' ) );
 	//        add_filter( 'query_vars', array( $this, 'add_query_vars_filter' ) ); // tell wordpress about new url parameters
@@ -87,9 +89,16 @@ class ucf_people_directory_shortcode {
 
 		$wp_query = null;
 		if ( $obj_shortcode_attributes->show_contacts ) { // user has searched, or the user or page owner has specified a group. show the contacts.
-			$wp_query = self::query_profiles( $obj_shortcode_attributes );
-			// print out profiles
-			$obj_shortcode_attributes->replacement_data .= self::profiles_html( $wp_query, $obj_shortcode_attributes );
+			$transient_data = get_transient( $obj_shortcode_attributes->transient_name );
+			if ( $transient_data ) {
+				$obj_shortcode_attributes->replacement_data .= $transient_data;
+			} else {
+				$wp_query = self::query_profiles( $obj_shortcode_attributes );
+				// print out profiles
+				$fresh_data                                 = self::profiles_html( $wp_query, $obj_shortcode_attributes );
+				$obj_shortcode_attributes->replacement_data .= $fresh_data;
+				set_transient( $obj_shortcode_attributes->transient_name, $fresh_data, 60 * 60 * 24 * 30 ); // one month expiration. will also expire when any person is added/updated
+			}
 
 			wp_reset_postdata();
 		}
@@ -827,6 +836,27 @@ class ucf_people_directory_shortcode {
 		wp_delete_term( get_term_by( 'slug', self::shortcode_slug )->term_id, ucf_college_shortcode_taxonomy::taxonomy_slug );
 	}
 
+	/**
+	 * This function alters a unique value whenever a person is added or edited.
+	 * The result is that all previous transients are invalidated or inaccessible.
+	 * They'll expire eventually, but they won't be utilized anymore, since their
+	 * name is directly tied to this value.
+	 * WordPress cannot delete transients with a wildcard, and since we need a lot
+	 * of different transients for each unique set of categories, pagination, posts_per_page,
+	 * and other variables, we can't simply invalidate all transients.
+	 * Instead, all transients with those variables also use this common cache value,
+	 * so when it changes, WordPress will try to access a brand new transient name which
+	 * doesn't exist yet, and all the old names stop being used.
+	 *
+	 * @param integer $post_id
+	 * @param WP_Post $post
+	 *
+	 * @throws Exception
+	 */
+	static function cache_bust_on_person_edit() {
+		set_transient( self::transient_cache_buster_name, bin2hex( random_bytes( 8 ) ) );
+	}
+
 }
 
 class ucf_people_directory_shortcode_attributes {
@@ -874,6 +904,12 @@ class ucf_people_directory_shortcode_attributes {
 	public $directory_id;
 
 	/**
+	 * @var string transient name for the card view of the current directory, based on name search, page, category, and
+	 *      a cache buster that changes whenever a profile changes
+	 */
+	public $transient_name;
+
+	/**
 	 * ucf_people_directory_shortcode_attributes constructor.
 	 * Initializes all values with safe and logical values, based on user input, editor preferences, and logical
 	 * deductions.
@@ -900,6 +936,7 @@ class ucf_people_directory_shortcode_attributes {
 		$this->show_group_filter_sidebar = ( get_field( 'show_group_filter_sidebar' ) || get_field( 'show_group_filter_sidebar' ) === null );
 
 		$this->directory_id = "menu-directory-departments-" . bin2hex( random_bytes( 8 ) ); // prevent #id collisions by generating a different id for each directory block. changes on each page load, but it isn't referenced in css.
+		$this->set_transient_name();
 	}
 
 	/**
@@ -983,6 +1020,51 @@ class ucf_people_directory_shortcode_attributes {
 			$this->weighted_category_id   = null;
 		}
 	}
+
+	/**
+	 * Computes the transient name for this particular directory view, based on the categories, search, page, post per
+	 * view, and a cache-buster unique value
+	 * @return bool|string|void
+	 */
+	protected function set_transient_name() {
+		if ( ! $this->show_contacts ) {
+			$this->transient_name = '';
+
+			return; // transient is only for contacts. if this current view doesn't show contacts, there's no transient.
+		}
+
+		// first, get the current cache-busting transient value. this value changes whenever a person is added or updated,
+		// so that the directory is always up to date with the latest information, but is only recomputed when people change.
+
+		$meta_transient_cache_buster_value = get_transient( ucf_people_directory_shortcode::transient_cache_buster_name );
+
+		// transient name is comprised of:
+		/*
+		 * 1. plugin name
+		 * HASH of the following:
+		 * 2. EITHER
+		 *       2a weight_category_slug, if set.
+		 *     OR
+		 *       2b editor_people_groups, array to string
+		 * 3. search string
+		 * 4. page
+		 * 5. posts_per_page
+		 * 6. Cache-busting value - changes whenever a person is edited or added
+		 *
+		 * "ucf-pd-"(md5){"enterprise-german-page1-20people-unique24425"}
+		 */
+		// because transient names are limited, everything besides the plugin name is hashed.
+		$transient_name = 'ucf-pd-'; // prefix with semi-readable name, so we can at least see in the database that these transients belong to this plugin
+		if ( $this->weighted_category_slug ) {
+			$category = $this->weighted_category_slug;
+		} else {
+			$category = implode( "+", $this->editor_people_groups );
+		}
+		$transient_name .= md5( $category . $this->search_by_name . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value );
+
+		$this->transient_name = substr( $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
+		echo $this->transient_name;
+	}
 }
 
 //new ucf_people_directory_shortcode();
@@ -992,4 +1074,12 @@ add_filter( 'query_vars', array(
 	'ucf_people_directory_shortcode',
 	'add_query_vars_filter'
 ) ); // tell wordpress about new url parameters
+
+// when a person is added or updated, change the cache-buster value to force directories to recompute
+// note: publish_person will run on both draft->publish and on publish->publish (ie saved updated data)
+// https://developer.wordpress.org/reference/functions/wp_transition_post_status/
+add_action( 'publish_person', array( 'ucf_people_directory_shortcode', 'cache_bust_on_person_edit' ) );
+add_action( 'trash_person', array( 'ucf_people_directory_shortcode', 'cache_bust_on_person_edit' ) );
+
+
 add_filter( 'ucf_college_shortcode_menu_item', array( 'ucf_people_directory_shortcode', 'add_ckeditor_shortcode' ) );
