@@ -1,6 +1,7 @@
 <?php
 
 class ucf_people_directory_shortcode {
+	const version               = "2.4.4"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -87,19 +88,22 @@ class ucf_people_directory_shortcode {
 			$obj_shortcode_attributes->replacement_data .= self::search_bar_html( $obj_shortcode_attributes );
 		}
 
-		$wp_query = null;
+		$wp_query           = null;
+		$wp_query_max_pages = null;
 		if ( $obj_shortcode_attributes->show_contacts ) { // user has searched or selected a group, or the editor is showing contacts on initial/unfiltered view. show the contacts.
-			$transient_data = get_transient( $obj_shortcode_attributes->transient_name_cards );
-			if ( $transient_data ) {
+			$transient_data_compressed = get_transient( $obj_shortcode_attributes->transient_name_cards );
+			if ( $transient_data_compressed ) {
+				$transient_data = gzuncompress($transient_data_compressed);
 				$obj_shortcode_attributes->replacement_data .= $transient_data;
-				$wp_query                                   = get_transient( $obj_shortcode_attributes->transient_name_wp_query );
+				$wp_query_max_pages                         = get_transient( $obj_shortcode_attributes->transient_name_wp_query_max_pages );
 			} else {
 				$wp_query = self::query_profiles( $obj_shortcode_attributes );
 				// print out profiles
 				$fresh_data                                 = self::profiles_html( $wp_query, $obj_shortcode_attributes );
 				$obj_shortcode_attributes->replacement_data .= $fresh_data;
-				set_transient( $obj_shortcode_attributes->transient_name_cards, $fresh_data, 60 * 60 * 24 * 30 ); // one month expiration. will also expire when any person is added/updated
-				set_transient( $obj_shortcode_attributes->transient_name_wp_query, $wp_query, 60 * 60 * 24 * 30 );
+				$wp_query_max_pages                         = $wp_query->max_num_pages;
+				set_transient( $obj_shortcode_attributes->transient_name_cards, gzcompress( $fresh_data ), WP_FS__TIME_WEEK_IN_SEC * 5 ); // 5 WEEK expiration. will also expire when any person is added/updated
+				set_transient( $obj_shortcode_attributes->transient_name_wp_query_max_pages, $wp_query_max_pages, WP_FS__TIME_WEEK_IN_SEC * 5 );
 			}
 
 			wp_reset_postdata();
@@ -111,7 +115,7 @@ class ucf_people_directory_shortcode {
 
 		// print out pagination, if we're showing contacts
 		if ( $obj_shortcode_attributes->show_contacts ) {
-			$obj_shortcode_attributes->replacement_data .= self::pagination_html( $wp_query, $obj_shortcode_attributes );
+			$obj_shortcode_attributes->replacement_data .= self::pagination_html( $wp_query_max_pages, $obj_shortcode_attributes );
 		}
 
 		$obj_shortcode_attributes->replacement_data .= "</div>";
@@ -590,13 +594,13 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function pagination_html( $wp_query, $shortcode_attributes ) {
+	static public function pagination_html( $wp_query_total_pages, $shortcode_attributes ) {
 		$html_pagination = "<div class='pagination'>";
 
 		$html_pagination .= paginate_links(
 			array(
 				'base'      => str_replace( 999999999, '%#%', esc_url( get_pagenum_link( 999999999 ) ) ),
-				'total'     => $wp_query->max_num_pages,
+				'total'     => $wp_query_total_pages,
 				'current'   => max( 1, $shortcode_attributes->paged ),
 				'end_size'  => 2,
 				'mid_size'  => 2,
@@ -913,9 +917,9 @@ class ucf_people_directory_shortcode_attributes {
 	public $transient_name_cards;
 
 	/**
-	 * @var string transient name for the wp_query, used for pagination
+	 * @var string transient name for the wp_query->max_num_pages, used for pagination
 	 */
-	public $transient_name_wp_query;
+	public $transient_name_wp_query_max_pages;
 
 	/**
 	 * ucf_people_directory_shortcode_attributes constructor.
@@ -1068,10 +1072,10 @@ class ucf_people_directory_shortcode_attributes {
 		} else {
 			$category = implode( "+", $this->editor_people_groups );
 		}
-		$transient_name = md5( $category . $this->search_by_name . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value );
+		$transient_name = md5( $category . $this->search_by_name . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value . ucf_people_directory_shortcode::version );
 
-		$this->transient_name_cards    = substr( $transient_name_prefix . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
-		$this->transient_name_wp_query = substr( $transient_name_prefix . 'wpq-' . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
+		$this->transient_name_cards              = substr( $transient_name_prefix . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
+		$this->transient_name_wp_query_max_pages = substr( $transient_name_prefix . 'pages-' . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
 	}
 }
 
