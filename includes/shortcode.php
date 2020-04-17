@@ -1,7 +1,7 @@
 <?php
 
 class ucf_people_directory_shortcode {
-	const version               = "2.4.4"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "2.5.0"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -823,7 +823,7 @@ class ucf_people_directory_shortcode {
 	/**
 	 * Only run this on plugin activation, as it's stored in the database
 	 */
-	static function insert_shortcode_term() {
+	/*static function insert_shortcode_term() {
 		$taxonomy = new ucf_college_shortcode_taxonomy;
 		$taxonomy->create_taxonomy();
 		wp_insert_term(
@@ -834,17 +834,17 @@ class ucf_people_directory_shortcode {
 				'slug'        => self::shortcode_slug
 			)
 		);
-	}
+	}*/
 
 	/**
 	 * Run when plugin is disabled and/or uninstalled. This removes the shortcode from the contentof shortcodes in the
 	 * taxonomy.
 	 */
-	static function delete_shortcode_term() {
+	/*static function delete_shortcode_term() {
 		$taxonomy = new ucf_college_shortcode_taxonomy;
 		$taxonomy->create_taxonomy();
 		wp_delete_term( get_term_by( 'slug', self::shortcode_slug )->term_id, ucf_college_shortcode_taxonomy::taxonomy_slug );
-	}
+	}*/
 
 	/**
 	 * This function alters a unique value whenever a person is added or edited.
@@ -1092,4 +1092,4 @@ add_action( 'publish_person', array( 'ucf_people_directory_shortcode', 'cache_bu
 add_action( 'trash_person', array( 'ucf_people_directory_shortcode', 'cache_bust_on_person_edit' ) );
 
 
-add_filter( 'ucf_college_shortcode_menu_item', array( 'ucf_people_directory_shortcode', 'add_ckeditor_shortcode' ) );
+//add_filter( 'ucf_college_shortcode_menu_item', array( 'ucf_people_directory_shortcode', 'add_ckeditor_shortcode' ) );

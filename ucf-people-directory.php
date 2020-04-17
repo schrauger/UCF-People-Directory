@@ -2,11 +2,13 @@
 /*
 Plugin Name: UCF People Directory
 Description: Provides a directory for the UCF people custom post type
-Version: 2.4.4
+Version: 2.5.0
+// Note - update version number here and in includes/shortcode.php
 Author: Stephen Schrauger
 Plugin URI: https://github.com/schrauger/UCF-People-Directory
 Github Plugin URI: schrauger/UCF-People-Directory
 */
+
 if ( ! defined( 'WPINC' ) ) {
 	die;
 }
@@ -17,8 +19,8 @@ if ( ! defined( 'WPINC' ) ) {
 // https://www.domain.tld/directory/page/number - shows limited subset of all posts (doesn't filter by category)
 // https://www.domain.tld/directory/tag/page/number - might not work in wordpress. would show paginated, filtered results
 
-include plugin_dir_path( __FILE__ ) . 'includes/common/tinymce.php';
-include plugin_dir_path( __FILE__ ) . 'includes/common/shortcode-taxonomy.php';
+//include plugin_dir_path( __FILE__ ) . 'includes/common/tinymce.php';
+//include plugin_dir_path( __FILE__ ) . 'includes/common/shortcode-taxonomy.php';
 include plugin_dir_path( __FILE__ ) . 'includes/acf-pro-fields.php';
 include plugin_dir_path( __FILE__ ) . 'includes/shortcode.php';
 
@@ -92,17 +94,17 @@ class ucf_people_directory {
 	// run on plugin activation
 	function activation() {
 		// insert the shortcode for this plugin as a term in the taxonomy
-		ucf_people_directory_shortcode::insert_shortcode_term();
+		//ucf_people_directory_shortcode::insert_shortcode_term();
 	}
 
 	// run on plugin deactivation
 	function deactivation() {
-		ucf_people_directory_shortcode::delete_shortcode_term();
+		//ucf_people_directory_shortcode::delete_shortcode_term();
 	}
 
 	// run on plugin complete uninstall
 	function uninstall() {
-		ucf_people_directory_shortcode::delete_shortcode_term();
+		//ucf_people_directory_shortcode::delete_shortcode_term();
 	}
 
 
