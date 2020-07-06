@@ -1,7 +1,7 @@
 <?php
 
 class ucf_people_directory_shortcode {
-	const version               = "2.5.0"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "2.6.0"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -104,6 +104,7 @@ class ucf_people_directory_shortcode {
 				$wp_query_max_pages                         = $wp_query->max_num_pages;
 				set_transient( $obj_shortcode_attributes->transient_name_cards, gzcompress( $fresh_data ), WP_FS__TIME_WEEK_IN_SEC * 5 ); // 5 WEEK expiration. will also expire when any person is added/updated
 				set_transient( $obj_shortcode_attributes->transient_name_wp_query_max_pages, $wp_query_max_pages, WP_FS__TIME_WEEK_IN_SEC * 5 );
+				wp_reset_postdata();
 			}
 
 			wp_reset_postdata();
@@ -371,6 +372,8 @@ class ucf_people_directory_shortcode {
 			}
 		}
 
+		wp_reset_postdata();
+
 		// sort the unweighted array by weights
 		asort( $weighted_array );
 
@@ -409,8 +412,9 @@ class ucf_people_directory_shortcode {
 			),
 		);
 		$wp_query   = new WP_Query( $query_args );
-
-		return $wp_query->posts;
+		$return_posts = $wp_query->posts;
+		wp_reset_postdata();
+		return $return_posts;
 	}
 
 	/**
@@ -479,7 +483,9 @@ class ucf_people_directory_shortcode {
 	}
 
 	/**
-	 * Call this function after the_post is set to a profile (called within a loop)
+	 * Call this function after the_post is set to a profile (called within a loop).
+	 * If the profile is in a People Group that has the Limited flag set,
+	 * then a limited set of info is printed.
 	 */
 	/**
 	 * @param ucf_people_directory_shortcode_attributes $shortcode_attributes
@@ -487,27 +493,50 @@ class ucf_people_directory_shortcode {
 	 * @return string
 	 */
 	static public function profile( $shortcode_attributes ) {
+		$id = get_the_ID();
+		$terms = get_the_terms($id, self::taxonomy_name);
+		$limited = false;
+		foreach ($terms as $term){
+			if (get_term_meta($term->term_id, 'limited-info', true) == 1){
+				$limited = true;
+			}
+		}
+		if ($limited){
+			return self::profile_limited($shortcode_attributes);
+		} else {
+			return self::profile_full($shortcode_attributes);
+		}
+	}
+
+	/**
+	 * Returns html that prints out a single profile, used within the directory listing
+	 * @param $shortcode_attributes
+	 *
+	 * @return string
+	 */
+	static public function profile_full( $shortcode_attributes) {
 		$html_single_profile = ''; //return data
+		$current_post_id = get_the_ID();
 
 		// #### set variables used in html output
-		$person_title_prefix = get_field( 'person_title_prefix' );
-		$full_name           = $person_title_prefix . ' ' . get_the_title();
+		$person_title_prefix = get_field( 'person_title_prefix', $current_post_id);
+		$person_title_suffix = get_field( 'person_title_suffix', $current_post_id);
+		$full_name           = $person_title_prefix . ' ' . get_the_title() . ' ' . $person_title_suffix;
 		$profile_url         = get_permalink();
 		$image_url           = get_the_post_thumbnail_url( null, 'medium' );
-		$cv_link             = get_field( 'person_cv' );
+		$cv_link             = get_field( 'person_cv', $current_post_id);
 		if ( ! $image_url ) {
 			$image_url = plugin_dir_url( __FILE__ ) . "default.png"; // default image location
 		}
-		$job_title = get_field( 'person_jobtitle' );
+		$job_title = get_field( 'person_jobtitle', $current_post_id);
 		if ( $cv_link ) {
 			$cv_link = "<a href='{$cv_link}' class='button yellow'>Download CV</a>";
 		}
-		$title_suffix = get_field( 'person_title_suffix' );
 		$department   = null; // get_field('person_') // @TODO this field may be unused on this site
-		$location     = get_field( 'person_room' );
-		$location_url = get_field( 'person_room_url' ); // link to a map
-		$email        = get_field( 'person_email' );
-		$phone_array  = get_field( 'person_phone_numbers' );
+		$location     = get_field( 'person_room', $current_post_id);
+		$location_url = get_field( 'person_room_url', $current_post_id);// link to a map
+		$email        = get_field( 'person_email', $current_post_id);
+		$phone_array  = get_field( 'person_phone_numbers', $current_post_id);
 		$phone        = $phone_array[ 0 ][ 'number' ];
 
 		$div_location = self::contact_info( $location, 'location', $location_url );
@@ -525,7 +554,7 @@ class ucf_people_directory_shortcode {
 		// ####
 
 		$html_single_profile .= "
-        <div class='person {$weight_class}'>
+        <div class='person person-full {$weight_class}'>
             <div class='photo'>
                 <a href='{$profile_url}' title='{$full_name}' style='background-image: url({$image_url})'>
                     {$full_name}
@@ -533,7 +562,6 @@ class ucf_people_directory_shortcode {
             </div>
             <div class='details'>
                 <a href='{$profile_url}' class='full_name'>{$full_name}</a>
-                <small>{$title_suffix}</small>
                 <span class='job_title'>{$job_title}</span>
                 <span class='department'>{$department}</span>
                 <div class='contact'>
@@ -542,6 +570,43 @@ class ucf_people_directory_shortcode {
                     {$div_phone}
                     {$cv_link}
                 </div>
+            </div>
+        </div>
+        ";
+
+		return $html_single_profile;
+	}
+
+	/**
+	 * Returns html that prints out a single profile, used within the directory listing
+	 * Limited info (for affiliates and others that have the limited-info flag set)
+	 * @param $shortcode_attributes
+	 *
+	 * @return string
+	 */
+	static public function profile_limited( $shortcode_attributes) {
+		$html_single_profile = ''; //return data
+		$current_post_id = get_the_ID();
+
+		// #### set variables used in html output
+		$person_title_prefix = get_field( 'person_title_prefix', $current_post_id);
+		$person_title_suffix = get_field( 'person_title_suffix', $current_post_id);
+		$full_name           = $person_title_prefix . ' ' . get_the_title() . ' ' . $person_title_suffix;
+
+		$weight = self::acf_weight_for_category( $shortcode_attributes->weighted_category_id, get_the_ID() );
+
+		if ( $weight ) {
+			$weight_class = "weighted weight-{$weight}";
+		} else {
+			$weight_class = "";
+		}
+
+		// ####
+
+		$html_single_profile .= "
+        <div class='person person-limited {$weight_class}'>
+            <div class='details'>
+                <span class='full_name'>{$full_name}</span>
             </div>
         </div>
         ";
@@ -717,6 +782,7 @@ class ucf_people_directory_shortcode {
 
 
 		}
+		wp_reset_postdata();
 
 		return $html_people_group_list;
 	}
