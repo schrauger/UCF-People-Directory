@@ -40,7 +40,7 @@ class ucf_people_directory_shortcode {
 	 * @var $shortcode_array array
 	 *
 	 */
-	static function add_ckeditor_shortcode( $shortcode_array ) {
+	public static function add_ckeditor_shortcode( $shortcode_array ) {
 		$shortcode_array[] = array(
 			'slug'        => self::shortcode_slug,
 			'name'        => self::shortcode_name,
@@ -58,7 +58,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return array
 	 */
-	static public function add_query_vars_filter( $vars ) {
+	public static function add_query_vars_filter( $vars ) {
 		$vars[] = self::GET_param_group;
 		$vars[] = self::GET_param_name; // person name, from user submitted search text
 
@@ -72,7 +72,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return mixed
 	 */
-	static public function replacement( $attrs = null ) {
+	public static function replacement( $attrs = null ) {
 
 		$obj_shortcode_attributes = new ucf_people_directory_shortcode_attributes();
 
@@ -124,7 +124,7 @@ class ucf_people_directory_shortcode {
 		return $obj_shortcode_attributes->replacement_data;
 	}
 
-	static function replacement_print() {
+	public static function replacement_print() {
 		echo self::replacement();
 	}
 
@@ -137,7 +137,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function search_bar_html( $shortcode_attributes ) {
+	public static function search_bar_html( $shortcode_attributes ) {
 		$html_search_bar  = '';
 		$name_search      = self::GET_param_name;
 		$current_page_url = wp_get_canonical_url();
@@ -179,7 +179,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return WP_Query
 	 */
-	static public function query_profiles( $shortcode_attributes ) {
+	public static function query_profiles( $shortcode_attributes ) {
 
 		// ## Query 1 - Run if viewing a single category
 		if ( $shortcode_attributes->weighted_category_id ) {
@@ -267,7 +267,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function override_sql_order( $orderby ) {
+	public static function override_sql_order( $orderby ) {
 		global $wpdb;
 
 		$sort_key       = self::acf_sort_key;
@@ -301,7 +301,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return array
 	 */
-	static public function profiles_weighted_id_list( $shortcode_attributes ) {
+	public static function profiles_weighted_id_list( $shortcode_attributes ) {
 		// first, find all profiles that have a 'head of department' or similar tag for the currently filtered department.
 		// sort by their weight. smaller numbers first.
 		$query_args = array(
@@ -388,7 +388,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return array
 	 */
-	static public function profiles_id_list( $shortcode_attributes ) {
+	public static function profiles_id_list( $shortcode_attributes ) {
 		$query_args = array(
 			'posts_per_page' => - 1,
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
@@ -426,7 +426,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return mixed
 	 */
-	static public function acf_meta_subfield_filter( $where ) {
+	public static function acf_meta_subfield_filter( $where ) {
 
 		$where = str_replace( 'meta_key = \'departments_$_department', "meta_key LIKE 'departments_%_department", $where );
 
@@ -442,7 +442,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return integer
 	 */
-	static public function acf_weight_for_category( $category_id, $person_id = null ) {
+	public static function acf_weight_for_category( $category_id, $person_id = null ) {
 		$return_weight = null;
 		if ( ! $person_id ) {
 			$person_id = get_the_ID();
@@ -464,7 +464,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function profiles_html( $wp_query, $shortcode_attributes ) {
+	public static function profiles_html( $wp_query, $shortcode_attributes ) {
 		$html_list_profiles = "<div class='profiles-list'>";
 
 		if ( $wp_query->have_posts() ) {
@@ -492,7 +492,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function profile( $shortcode_attributes ) {
+	public static function profile( $shortcode_attributes ) {
 		$id = get_the_ID();
 		$terms = get_the_terms($id, self::taxonomy_name);
 		$limited = false;
@@ -514,7 +514,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function profile_full( $shortcode_attributes) {
+	public static function profile_full( $shortcode_attributes) {
 		$html_single_profile = ''; //return data
 		$current_post_id = get_the_ID();
 
@@ -584,7 +584,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function profile_limited( $shortcode_attributes) {
+	public static function profile_limited( $shortcode_attributes) {
 		$html_single_profile = ''; //return data
 		$current_post_id = get_the_ID();
 
@@ -624,7 +624,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function contact_info( $data, $class, $url = null, $title = null ) {
+	public static function contact_info( $data, $class, $url = null, $title = null ) {
 
 		if ( $data ) {
 			if ( ! $title ) {
@@ -659,7 +659,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function pagination_html( $wp_query_total_pages, $shortcode_attributes ) {
+	public static function pagination_html( $wp_query_total_pages, $shortcode_attributes ) {
 		$html_pagination = "<div class='pagination'>";
 
 		$html_pagination .= paginate_links(
@@ -688,7 +688,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function people_groups_html( $shortcode_attributes ) {
+	public static function people_groups_html( $shortcode_attributes ) {
 		$html_people_groups = '';
 
 
@@ -714,7 +714,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function people_group_list_html( $shortcode_attributes ) {
+	public static function people_group_list_html( $shortcode_attributes ) {
 		$html_people_group_list = '';
 
 		$current_page_url = wp_get_canonical_url();
@@ -797,7 +797,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function term_list_entry( $title, $current_page_url, $slug, $class = 'parent' ) {
+	public static function term_list_entry( $title, $current_page_url, $slug, $class = 'parent' ) {
 		if ( $slug ) {
 			$url_filter = "?" . self::GET_param_group . "={$slug}";
 			$title_text = "Display only {$title} profiles";
@@ -826,7 +826,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @return string
 	 */
-	static public function term_list_entry_with_children( $top_level_term, $current_page_url, $current_term, $people_groups_terms_children, $shortcode_attributes ) {
+	public static function term_list_entry_with_children( $top_level_term, $current_page_url, $current_term, $people_groups_terms_children, $shortcode_attributes ) {
 		$return_accordion_html              = "";
 		$accordion_collapsible_content_html = "";
 		$collapsed                          = true;
@@ -926,7 +926,7 @@ class ucf_people_directory_shortcode {
 	 *
 	 * @throws Exception
 	 */
-	static function cache_bust_on_person_edit() {
+	public static function cache_bust_on_person_edit() {
 		set_transient( self::transient_cache_buster_name, bin2hex( random_bytes( 8 ) ) );
 	}
 
