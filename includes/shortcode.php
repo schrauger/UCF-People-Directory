@@ -601,12 +601,15 @@ class ucf_people_directory_shortcode {
 			$weight_class = "";
 		}
 
+		$content = get_the_content();
+
 		// ####
 
 		$html_single_profile .= "
         <div class='person person-limited {$weight_class}'>
             <div class='details'>
                 <span class='full_name'>{$full_name}</span>
+                <div class='content'>{$content}</div>
             </div>
         </div>
         ";

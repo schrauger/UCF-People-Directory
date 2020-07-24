@@ -22,8 +22,9 @@ if ( ! defined( 'WPINC' ) ) {
 //include plugin_dir_path( __FILE__ ) . 'includes/common/tinymce.php';
 //include plugin_dir_path( __FILE__ ) . 'includes/common/shortcode-taxonomy.php';
 include plugin_dir_path( __FILE__ ) . 'includes/acf-pro-fields.php';
+include plugin_dir_path( __FILE__ ) . 'includes/acf-pro-location-rules.php';
 include plugin_dir_path( __FILE__ ) . 'includes/shortcode.php';
-include plugin_dir_path( __FILE__ ) . 'includes/taxonomy.php';
+//include plugin_dir_path( __FILE__ ) . 'includes/taxonomy.php';
 
 
 class ucf_people_directory {
