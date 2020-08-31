@@ -29,8 +29,8 @@ class ucf_people_directory_acf_pro_fields {
 					'title'           => __( 'UCF People Directory' ),
 					'description'     => __( 'People directory.' ),
 					'render_callback' => array( 'ucf_people_directory_shortcode', 'replacement_print' ),
-					'category'        => 'layout',
-					'icon'            => 'screenoptions',
+					'category'        => 'embed',
+					'icon'            => 'id',
 					'keywords'        => array(
 						'ucf',
 						'college',
