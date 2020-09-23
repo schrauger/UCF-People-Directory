@@ -194,6 +194,7 @@ class ucf_people_directory_shortcode {
 			'paged'          => $shortcode_attributes->paged,
 			'posts_per_page' => $shortcode_attributes->posts_per_page,
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
+			'post_status'    => 'publish',
 			's'              => $shortcode_attributes->search_by_name,
 			/*'meta_query'     => array( // slow, but works for people that lack the sort key. profile migrator should have fixed that bug, though.
 				'relation' => 'OR',
@@ -311,6 +312,7 @@ class ucf_people_directory_shortcode {
 			'posts_per_page'   => - 1,
 			'post_type'        => 'person',
 			// 'person' is a post type defined in ucf-people-cpt
+			'post_status'    => 'publish',
 			's'                => $shortcode_attributes->search_by_name,
 			'orderby'          => 'meta_value',
 			'meta_key'         => self::acf_sort_key,
@@ -392,6 +394,7 @@ class ucf_people_directory_shortcode {
 		$query_args = array(
 			'posts_per_page' => - 1,
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
+			'post_status'    => 'publish',
 			's'              => $shortcode_attributes->search_by_name,
 			'orderby'        => 'meta_value',
 			'meta_key'       => self::acf_sort_key,
