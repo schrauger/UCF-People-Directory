@@ -84,6 +84,20 @@ Individual contact listing within staff directory
 					padding: 5px;
 				}
 			}
+
+			.content {
+				.contact-info {
+					.specialization {
+						h4 {
+							display: none;
+						}
+					}
+					.degree,
+					.appt-level {
+						display: none;
+					}
+				}
+			}
 		}
 	}
 

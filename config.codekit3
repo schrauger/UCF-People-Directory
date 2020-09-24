@@ -41,6 +41,14 @@
 		"oAP": "/includes/acf-pro-fields.php",
 		"oF": 0
 		},
+	"/includes/acf-pro-location-rules.php": {
+		"cB": 0,
+		"ft": 8192,
+		"hM": 0,
+		"oA": 0,
+		"oAP": "/includes/acf-pro-location-rules.php",
+		"oF": 0
+		},
 	"/includes/common/shortcode-taxonomy.php": {
 		"cB": 0,
 		"ft": 8192,
@@ -110,6 +118,22 @@
 		"oS": 0,
 		"uL": 1
 		},
+	"/includes/shortcode.php": {
+		"cB": 0,
+		"ft": 8192,
+		"hM": 0,
+		"oA": 0,
+		"oAP": "/includes/shortcode.php",
+		"oF": 0
+		},
+	"/includes/taxonomy.php": {
+		"cB": 0,
+		"ft": 8192,
+		"hM": 0,
+		"oA": 0,
+		"oAP": "/includes/taxonomy.php",
+		"oF": 0
+		},
 	"/README.md": {
 		"cB": 0,
 		"cS": 0,
@@ -135,6 +159,14 @@
 		"hM": 0,
 		"oA": 0,
 		"oAP": "/repo-setup.sh",
+		"oF": 0
+		},
+	"/ucf-people-directory.php": {
+		"cB": 0,
+		"ft": 8192,
+		"hM": 0,
+		"oA": 0,
+		"oAP": "/ucf-people-directory.php",
 		"oF": 0
 		}
 	},
