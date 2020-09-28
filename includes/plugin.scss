@@ -143,12 +143,18 @@ Individual contact listing within staff directory
 					.fa {
 						transition: 0.25s
 					}
+
 					i.fa-angle-down::before{ /* makes the "expand arrow" offset to the left of the parent filter */
 						width: 0;
 						display: inline-block;
 						position: relative;
 						left: -1em;
 					}
+
+					&[data-toggle="collapse"] {
+						padding-left: 15px;
+					}
+
 					&[aria-expanded="true"] {
 						.fa-angle-down {
 							transform: scaleY(-1);
