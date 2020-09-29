@@ -4,7 +4,7 @@ Plugin Name: UCF People Directory
 Description: Provides a directory for the UCF people custom post type
 
 >>> Note - update version number here and in includes/shortcode.php <<<
-Version: 2.7.3
+Version: 2.7.4
 >>> Note - update version number here and in includes/shortcode.php <<<
 
 Author: Stephen Schrauger
