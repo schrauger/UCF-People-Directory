@@ -64,7 +64,7 @@ Individual contact listing within staff directory
   float: right;
   width: 25%; }
   .ucf-people-directory .people_groups .list {
-    margin: 25px 0; }
+    margin: 25px 0 25px 25px; }
     .ucf-people-directory .people_groups .list li {
       border-bottom: solid 1px #f0f0f0;
       padding: 10px 0;
