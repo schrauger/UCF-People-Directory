@@ -4,7 +4,7 @@ Plugin Name: UCF People Directory
 Description: Provides a directory for the UCF people custom post type
 
 ### Note - update version number here and in includes/shortcode.php
-Version: 2.8.3
+Version: 2.9.0
 ###
 
 Author: Stephen Schrauger
@@ -31,7 +31,8 @@ include plugin_dir_path( __FILE__ ) . 'includes/shortcode.php';
 
 
 class ucf_people_directory {
-	static $directory_path = 'directory';
+	//const directory_path = 'directory';
+	const taxonomy_name = 'people_group'; // defined by ucf people plugin
 
 	function __construct() {
 		// plugin css/js
@@ -42,6 +43,9 @@ class ucf_people_directory {
 		register_activation_hook( __FILE__, array( $this, 'activation' ) );
 		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 		register_uninstall_hook( __FILE__, array( $this, 'deactivation' ) );
+
+		add_filter( 'admin_init', array($this, 'add_admin_hook'));
+
 	}
 
 	function add_css() {
@@ -67,6 +71,49 @@ class ucf_people_directory {
 			);
 		}
 	}
+
+	function add_admin_hook(){
+		// add restriction to taxonomy terms that are marked as 'external' by hiding them from editors.
+		// admins can still see them, and editors could add the term fairly easily if they tried with javascript,
+		// but this is mainly a UI change so that they don't accidentally
+		// or incorrectly use a taxonomy term that should not be used on anything.
+		//
+		// Only add it to admin pages - that is, backend pages like the page editor and taxonomy editor.
+		// Frontend pages, like the directory, will not have those special terms removed
+		// (they will however be modified to show an external link by a different function)
+		add_filter( 'get_terms_defaults', array($this, 'hide_categories_terms'), 10, 2);
+	}
+
+	// add restriction to taxonomy terms that are marked as 'external' by hiding them from editors.
+	// admins can still see them, and editors could add the term fairly easily if they tried with javascript,
+	// but this is mainly a UI change so that they don't accidentally
+	// or incorrectly use a taxonomy term that should not be used on anything.
+	function hide_categories_terms($args, $taxonomies){
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			// make sure to match this capability with the one defined in acf-pro-fields.php
+
+			if ( count( $taxonomies ) != 1 || ! in_array( self::taxonomy_name, $taxonomies ) ) {
+				return ( $args );
+			}
+
+			$args[ 'meta_query' ] = array(
+				'relation' => 'OR',
+				array(
+					'key'     => 'external-link',
+					'value'   => '1',
+					'compare' => '!=',
+				),
+				array(
+					'key'     => 'external-link',
+					'compare' => 'NOT EXISTS',
+				),
+			);
+		}
+		return ($args);
+	}
+
+
 	/*
 		// add rewrite rules
 		static function custom_rewrite( $wp_rewrite){

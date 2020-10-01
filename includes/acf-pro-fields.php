@@ -359,74 +359,86 @@ class ucf_people_directory_acf_pro_fields {
 	// Adds a checkbox to the backend taxonomy terms. If checked, that People Group will limit the information shown for any Person who is assigned that group.
 	static function people_group_meta_fields() {
 		if ( function_exists( 'acf_add_local_field_group' ) ) {
-			acf_add_local_field_group(
+			$fields_array = array();
+
+
+			$fields_array[] = array(
+				'key'               => 'field_5f19f978b21ac',
+				'label'             => 'Limited Info',
+				'name'              => 'limited-info',
+				'type'              => 'true_false',
+				'instructions'      => 'If set, any Person who is assigned to this People Group will have limited fields shown in the editor, and in Directory views they will have limited information shown and have no link to their full profile.',
+				'required'          => 0,
+				'conditional_logic' => 0,
+				'wrapper'           => array(
+					'width' => '',
+					'class' => '',
+					'id'    => '',
+				),
+				'message'           => '',
+				'default_value'     => 0,
+				'ui'                => 1,
+				'ui_on_text'        => '',
+				'ui_off_text'       => '',
+			);
+
+			// Only show the toggle for external links to admins or others with the manage_options capability.
+			// If set, this toggle will hide a term from non admins on the editor side, as well as overwrite
+			// its listing in the directory with an external link (ie to point to an offsite directory).
+			if ( current_user_can( 'manage_options' ) ) {
+				// make sure to match this capability with the one defined in ucf-people-directory.php
+
+				$fields_array[] = array(
+					'key'               => 'field_5f19f978b21ad',
+					'label'             => 'External Link',
+					'name'              => 'external-link',
+					'type'              => 'true_false',
+					'instructions'      => 'If checked, this People Group will link to an external directory, and it will prevent a Person from being added to this group.
+							                        <em>Warning - any term marked with this will become invisible to non-admin users, except during frontend directory viewing (for printing out the link).</em>',
+					'required'          => 0,
+					'conditional_logic' => 0,
+					'wrapper'           => array(
+						'width' => '',
+						'class' => '',
+						'id'    => '',
+					),
+					'message'           => '',
+					'default_value'     => 0,
+					'ui'                => 1,
+					'ui_on_text'        => '',
+					'ui_off_text'       => '',
+				);
+				$fields_array[] = array(
+					'key'               => 'field_5f19f978b21ae',
+					'label'             => 'External Link URL',
+					'name'              => 'external-link-url',
+					'type'              => 'url',
+					'instructions'      => 'The url to the external directory.',
+					'required'          => 1,
+					'conditional_logic' => array(
+						array(
+							array(
+								'field'    => 'field_5f19f978b21ad',
+								'operator' => '==',
+								'value'    => '1',
+							),
+						),
+					),
+					'wrapper'           => array(
+						'width' => '',
+						'class' => '',
+						'id'    => '',
+					),
+					'message'           => '',
+					'default_value'     => '',
+				);
+			}
+
+				acf_add_local_field_group(
 				array(
 					'key'                   => 'group_5f19f92f44f8b',
 					'title'                 => 'People Group Taxonomy Meta Fields',
-					'fields'                => array(
-						array(
-							'key'               => 'field_5f19f978b21ac',
-							'label'             => 'Limited Info',
-							'name'              => 'limited-info',
-							'type'              => 'true_false',
-							'instructions'      => 'If set, any Person who is assigned to this People Group will have limited fields shown in the editor, and in Directory views they will have limited information shown and have no link to their full profile.',
-							'required'          => 0,
-							'conditional_logic' => 0,
-							'wrapper'           => array(
-								'width' => '',
-								'class' => '',
-								'id'    => '',
-							),
-							'message'           => '',
-							'default_value'     => 0,
-							'ui'                => 1,
-							'ui_on_text'        => '',
-							'ui_off_text'       => '',
-						),
-						array(
-							'key'               => 'field_5f19f978b21ad',
-							'label'             => 'External Link',
-							'name'              => 'external-link',
-							'type'              => 'true_false',
-							'instructions'      => 'If checked, this People Group will link to an external directory, and it will prevent a Person from being added to this group.',
-							'required'          => 0,
-							'conditional_logic' => 0,
-							'wrapper'           => array(
-								'width' => '',
-								'class' => '',
-								'id'    => '',
-							),
-							'message'           => '',
-							'default_value'     => 0,
-							'ui'                => 1,
-							'ui_on_text'        => '',
-							'ui_off_text'       => '',
-						),
-						array(
-							'key'               => 'field_5f19f978b21ae',
-							'label'             => 'External Link URL',
-							'name'              => 'external-link-url',
-							'type'              => 'url',
-							'instructions'      => 'The url to the external directory.',
-							'required'          => 1,
-							'conditional_logic' => array(
-								array(
-									array(
-										'field'    => 'field_5f19f978b21ad',
-										'operator' => '==',
-										'value'    => '1',
-									),
-								),
-							),
-							'wrapper'           => array(
-								'width' => '',
-								'class' => '',
-								'id'    => '',
-							),
-							'message'           => '',
-							'default_value'     => '',
-						),
-					),
+					'fields'                => $fields_array,
 					'location'              => array(
 						array(
 							array(

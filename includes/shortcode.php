@@ -1,7 +1,7 @@
 <?php
 
 class ucf_people_directory_shortcode {
-	const version               = "2.8.3"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "2.9.0"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -63,6 +63,35 @@ class ucf_people_directory_shortcode {
 		$vars[] = self::GET_param_name; // person name, from user submitted search text
 
 		return $vars;
+	}
+
+	/**
+	 * Adds a filter with a priority higher/later than the one added in ucf-people-directory.php (which hides certain terms for editors).
+	 * This filter overrides the previous one and unhides categories, so that they show up in the directory.
+	 * NOTE: Not actually used, since I figured out how to apply the initial hiding filter to just backend pages.
+	 *       But this function can be used elsewhere or in the future if the hiding filter needs to be bypassed for some reason.
+	 * @param $args
+	 * @param $taxonomies
+	 *
+	 * @return mixed
+	 */
+	public static function unhide_categories_terms($args, $taxonomies){
+		if ( count( $taxonomies ) != 1 || ! in_array( self::taxonomy_name, $taxonomies ) ) {
+			return ( $args );
+		}
+
+		$args[ 'meta_query' ] = array(
+			'relation' => 'OR',
+			array(
+				'key'     => 'external-link',
+				'compare' => 'EXISTS',
+			),
+			array(
+				'key'     => 'external-link',
+				'compare' => 'NOT EXISTS',
+			),
+		);
+		return ($args);
 	}
 
 	/**
@@ -697,8 +726,18 @@ class ucf_people_directory_shortcode {
 	public static function people_groups_html( $shortcode_attributes ) {
 		$html_people_groups = '';
 
+		// bypass the normal filter that hides people_group terms marked as external.
+		// normally, those are invisible to non-admins, but we want them to show up
+		// on the directory output.
 
+		// don't need to add a filter to unhide terms; the previous filter to hide the terms only gets added
+		// during admin_init pages (ie editor and other backend pages), so on frontend actual pages,
+		// that filter hasn't been included.
+		// this code has been left in so that it is easy to override the filter if need be in the future.
+		//add_filter( 'get_terms_defaults', array('ucf_people_directory_shortcode', 'unhide_categories_terms'), 20, 2);
 		$people_group_list_html = self::people_group_list_html( $shortcode_attributes );
+		//remove_filter( 'get_terms_defaults', array('ucf_people_directory_shortcode', 'unhide_categories_terms'), 20);
+
 		$html_people_groups     .= "
             <div class='people_groups'>
                 <h3 class='title yellow_underline'>Filter by</h3>
@@ -1183,6 +1222,7 @@ class ucf_people_directory_shortcode_attributes {
 
 add_action( 'init', array( 'ucf_people_directory_shortcode', 'add_shortcode' ) );
 add_filter( 'query_vars', array( 'ucf_people_directory_shortcode', 'add_query_vars_filter' ) );
+
 // tell wordpress about new url parameters
 
 // when a person is added or updated, change the cache-buster value to force directories to recompute
