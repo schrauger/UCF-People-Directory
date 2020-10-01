@@ -383,6 +383,49 @@ class ucf_people_directory_acf_pro_fields {
 							'ui_on_text'        => '',
 							'ui_off_text'       => '',
 						),
+						array(
+							'key'               => 'field_5f19f978b21ad',
+							'label'             => 'External Link',
+							'name'              => 'external-link',
+							'type'              => 'true_false',
+							'instructions'      => 'If checked, this People Group will link to an external directory, and it will prevent a Person from being added to this group.',
+							'required'          => 0,
+							'conditional_logic' => 0,
+							'wrapper'           => array(
+								'width' => '',
+								'class' => '',
+								'id'    => '',
+							),
+							'message'           => '',
+							'default_value'     => 0,
+							'ui'                => 1,
+							'ui_on_text'        => '',
+							'ui_off_text'       => '',
+						),
+						array(
+							'key'               => 'field_5f19f978b21ae',
+							'label'             => 'External Link URL',
+							'name'              => 'external-link-url',
+							'type'              => 'url',
+							'instructions'      => 'The url to the external directory.',
+							'required'          => 1,
+							'conditional_logic' => array(
+								array(
+									array(
+										'field'    => 'field_5f19f978b21ad',
+										'operator' => '==',
+										'value'    => '1',
+									),
+								),
+							),
+							'wrapper'           => array(
+								'width' => '',
+								'class' => '',
+								'id'    => '',
+							),
+							'message'           => '',
+							'default_value'     => '',
+						),
 					),
 					'location'              => array(
 						array(

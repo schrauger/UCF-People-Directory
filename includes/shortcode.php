@@ -730,7 +730,8 @@ class ucf_people_directory_shortcode {
 
 		$get_terms_arguments = array(
 			'taxonomy'   => self::taxonomy_name,
-			'hide_empty' => true, // hide empty groups, even if specified by editor
+			//'hide_empty' => true, // hide empty groups, even if specified by editor
+			'hide_empty' => false, // we have to include empty groups due to the possibility of an external link category which will have a 0 count usage. we have to filter out other empty ones later.
 		);
 		if ( sizeof( $shortcode_attributes->editor_people_groups ) > 0 ) {
 			$get_terms_arguments[ 'include' ] = $shortcode_attributes->editor_people_groups_ids; // only include terms specified by the editor
@@ -740,6 +741,7 @@ class ucf_people_directory_shortcode {
 		}
 
 		$people_groups_terms_top_level = new WP_Term_Query( $get_terms_arguments );
+
 		if ( ! $current_term ) {
 			if ( $shortcode_attributes->show_contacts_on_unfiltered ) {
 				// only show the 'all groups' link on an unfiltered view if the editor is also showing contacts.
@@ -766,12 +768,17 @@ class ucf_people_directory_shortcode {
 			$people_groups_terms_children = get_terms(
 				array(
 					'taxonomy'   => self::taxonomy_name,
-					'hide_empty' => true, // hide empty groups, even if specified by editor
+					//'hide_empty' => true, // hide empty groups, even if specified by editor
+					'hide_empty' => false, // we have to include empty groups due to the possibility of an external link category which will have a 0 count usage. we have to filter out other empty ones later.
 					'parent'     => $top_level_term->term_id // only show top level children for this group
 				)
 			);
 
-			if ( sizeof( $people_groups_terms_children ) > 0 ) {
+			// Option 1 - Have all top level groups show with an accordion
+			$html_people_group_list .= self::term_list_entry_with_children( $top_level_term, $current_page_url, $current_term, $people_groups_terms_children, $shortcode_attributes );
+
+			// Option 2 - Have childless groups be on their own without an accordion, but show accordion for categories with children.
+			/*if ( sizeof( $people_groups_terms_children ) > 0 ) {
 				// term has children. make the top term an accordion, with the first inner element pointing to the parent filter. rest of elements are children filters
 				$html_people_group_list .= self::term_list_entry_with_children( $top_level_term, $current_page_url, $current_term, $people_groups_terms_children, $shortcode_attributes );
 
@@ -784,8 +791,7 @@ class ucf_people_directory_shortcode {
 				} else {
 					$html_people_group_list .= self::term_list_entry( $top_level_term->name, $current_page_url, $top_level_term->slug, 'parent' );
 				}
-			}
-
+			}*/
 
 		}
 		wp_reset_postdata();
@@ -794,7 +800,8 @@ class ucf_people_directory_shortcode {
 	}
 
 	/**
-	 * Print out a single list item of the people group term
+	 * Print out a single list item of the people group term.
+	 * If term has no count (ie unused), it doesn't print out, unless the external flag is set and a url is defined.
 	 *
 	 * @param        $title
 	 * @param        $current_page_url
@@ -804,19 +811,35 @@ class ucf_people_directory_shortcode {
 	 * @return string
 	 */
 	public static function term_list_entry( $title, $current_page_url, $slug, $class = 'parent' ) {
-		if ( $slug ) {
-			$url_filter = "?" . self::GET_param_group . "={$slug}";
-			$title_text = "Display only {$title} profiles";
-		} else {
-			$url_filter = ""; //if no slug is defined, this is the 'All groups' reset filter
-			$title_text = "Display all profiles";
+		$term_url = "";
+		$term = get_term_by('slug', $slug, ucf_people_directory_shortcode::taxonomy_name);
+
+		$external_set = get_term_meta($term->term_id, 'external-link', true);
+		if ($external_set){
+			$term_url = get_term_meta($term->term_id, 'external-link-url', true);
+		}
+
+		$count = $term->count;
+		if (!$term_url && $count == 0){
+			return ""; // don't show any groups that are unused, except for those marked as external with a link defined.
+		}
+
+		if (!$term_url){
+			if ( $slug ) {
+				$url_filter = "?" . self::GET_param_group . "={$slug}";
+				$title_text = "Display only {$title} profiles";
+			} else {
+				$url_filter = ""; //if no slug is defined, this is the 'All groups' reset filter
+				$title_text = "Display all profiles";
+			}
+			$term_url = $current_page_url . $url_filter;
 		}
 
 		return "
                 <li class='menu-item {$class}'>
                     <a 
                         title='{$title_text}' 
-                        href='{$current_page_url}{$url_filter}'>
+                        href='{$term_url}'>
                         {$title}
                     </a>
                 </li>
