@@ -1,7 +1,7 @@
 <?php
 
 class ucf_people_directory_shortcode {
-	const version               = "2.8.0"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "2.8.1"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -878,6 +878,11 @@ class ucf_people_directory_shortcode {
 			}
 
 		}
+
+		if (!$accordion_collapsible_content_html){
+			return ""; // no inner content. probably due to top level term having 0 count.
+		}
+
 		if ( $collapsed ) {
 			$collapse_class = "collapse";
 			$expanded       = "false";
