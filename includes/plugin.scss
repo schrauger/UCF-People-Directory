@@ -125,6 +125,7 @@ Individual contact listing within staff directory
 	    				&.child,
 						&.parent {
 							padding-left: 20px;
+							page-break-inside: avoid;
 						}
 
 						&:last-child {
