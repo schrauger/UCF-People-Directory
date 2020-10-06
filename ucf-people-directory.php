@@ -4,7 +4,7 @@ Plugin Name: UCF People Directory
 Description: Provides a directory for the UCF people custom post type
 
 ### Note - update version number here and in includes/shortcode.php
-Version: 2.9.0
+Version: 3.0.0
 ###
 
 Author: Stephen Schrauger
@@ -73,6 +73,7 @@ class ucf_people_directory {
 	}
 
 	function add_admin_hook(){
+
 		// add restriction to taxonomy terms that are marked as 'external' by hiding them from editors.
 		// admins can still see them, and editors could add the term fairly easily if they tried with javascript,
 		// but this is mainly a UI change so that they don't accidentally
@@ -112,36 +113,6 @@ class ucf_people_directory {
 		}
 		return ($args);
 	}
-
-
-	/*
-		// add rewrite rules
-		static function custom_rewrite( $wp_rewrite){
-
-			add_rewrite_tag(
-				'%mycustomtag%',
-				'([^/]+)'
-			);
-
-			/*add_rewrite_rule(
-				'^' . self::$directory_path . '/mycustomtag/([^/]+)/page/([^/]+)',
-				self::$directory_path . '?tag=$matches[1]&paged=$matches[2]',
-				'bottom'
-			);
-			add_rewrite_rule(
-				'^' . self::$directory_path . '/mycustomtag/([^/]+)',
-				'index.php?pagename=' . self::$directory_path . '&mycustomtag=$matches[1]',
-				'bottom'
-			);
-			/*add_rewrite_rule(
-				'^' . self::$directory_path . '/page/([^/]+)',
-				self::$directory_path . '?tag=$matches[1]',
-				'bottom'
-			);*//*
-
-
-    }*/
-
 
 	// run on plugin activation
 	function activation() {

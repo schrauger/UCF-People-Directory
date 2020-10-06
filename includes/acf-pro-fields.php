@@ -18,6 +18,11 @@ class ucf_people_directory_acf_pro_fields {
 
 		// add 'limited' checkbox to people group taxonomy
 		add_action( 'acf/init', array( 'ucf_people_directory_acf_pro_fields', 'people_group_meta_fields' ) );
+
+		// pull in taxonomy from main blog, if the block is requesting that
+		add_filter( 'acf/fields/taxonomy/query', array('ucf_people_directory_acf_pro_fields', 'mark_term_query_origination'), 10, 3);
+		add_filter( 'get_terms', array('ucf_people_directory_acf_pro_fields','people_group_switch_to_blog'), 20, 3);
+
 	}
 
 	static function create_fields() {
@@ -101,6 +106,11 @@ class ucf_people_directory_acf_pro_fields {
 										'operator' => '==',
 										'value'    => '1',
 									),
+									array(
+										'field'    => 'field_5e72817c085cd',
+										'operator' => '!=',
+										'value'    => '1',
+									),
 								),
 							),
 							'wrapper'           => array(
@@ -118,6 +128,66 @@ class ucf_people_directory_acf_pro_fields {
 									'key'               => 'field_5c81372a0c0f7',
 									'label'             => 'Group',
 									'name'              => 'group',
+									'type'              => 'taxonomy',
+									'instructions'      => '',
+									'required'          => 1,
+									'conditional_logic' => 0,
+									'wrapper'           => array(
+										'width' => '',
+										'class' => '',
+										'id'    => '',
+									),
+									'taxonomy'          => 'people_group',
+									'field_type'        => 'select',
+									'allow_null'        => 0,
+									'add_term'          => 0,
+									'save_terms'        => 0,
+									'load_terms'        => 0,
+									'return_format'     => 'object',
+									'multiple'          => 0,
+								),
+							),
+						),
+						array(
+							'key'               => 'field_5c8136ee0c0f7',
+							'label'             => 'People Directory Groups',
+							'name'              => 'specific_terms_main_site',
+							'type'              => 'repeater',
+							'instructions'      => '',
+							'required'          => 0,
+							'conditional_logic' => array(
+								array(
+									array(
+										'field'    => 'field_5e722eaa23422',
+										'operator' => '==',
+										'value'    => '1',
+									),
+									array(
+										'field'    => 'field_5e72817c085cd',
+										'operator' => '==',
+										'value'    => '1',
+									),
+								),
+							),
+							'wrapper'           => array(
+								'width' => '',
+								'class' => '',
+								'id'    => '',
+							),
+							'collapsed'         => '',
+							'min'               => 1,
+							'max'               => 0,
+							'layout'            => 'table',
+							'button_label'      => 'Add group',
+							'sub_fields'        => array(
+								// replicate the previous field, and show it when the user wants COM profiles instead of current site profiles.
+								// the key is the only thing that changes, since that's what is checked during the get_term filter
+								// to see if we should switch to blog. we can't access other acf fields during the filter, so
+								// we use the fact that the user is viewing this slightly different field to determine when to switch to blog 1.
+								array(
+									'key'               => 'field_5c81372a0c0f8', // same field as previous, but different key and only shown when
+									'label'             => 'Group',
+									'name'              => 'group_main_site', // I guess we'll use a different field name as well
 									'type'              => 'taxonomy',
 									'instructions'      => '',
 									'required'          => 1,
@@ -197,6 +267,25 @@ class ucf_people_directory_acf_pro_fields {
 							'max'               => 100,
 							'step'              => 1,
 						),
+						((get_current_blog_id() !== 1) ? array(
+							'key'               => 'field_5e72817c085cd',
+							'label'             => 'Pull from COM directory',
+							'name'              => 'switch_to_main_site',
+							'type'              => 'true_false',
+							'instructions'      => '',
+							'required'          => 0,
+							'conditional_logic' => 0,
+							'wrapper'           => array(
+								'width' => '',
+								'class' => '',
+								'id'    => '',
+							),
+							'message'           => 'Show profiles from COM main directory instead of subsite profiles.',
+							'default_value'     => 0,
+							'ui'                => 1,
+							'ui_on_text'       => 'COM',
+							'ui_off_text'        => 'Subsite',
+						) : null),
 					),
 					'location'              => array(
 						array(
@@ -460,6 +549,51 @@ class ucf_people_directory_acf_pro_fields {
 			);
 		}
 	}
+
+	/**
+	 * Adds a flag to the $args so that the subsequent get_terms call by wordpress can be detected and modified.
+	 * This function checks to see if the user is trying to view people groups for the main site while on a subsite.
+	 * If so, it adds a flag to the arguments, and another function detects that and modifies the term request.
+	 * This is primarily for the editor view when modifying options, since the actual directory output
+	 * is able to check the other acf fields values and switch to blogs as needed.
+	 * @param $args
+	 * @param $field
+	 * @param $post_id
+	 *
+	 * @return mixed
+	 */
+	static function mark_term_query_origination($args, $field, $post_id) {
+		if ($field['key'] == 'field_5c81372a0c0f8' || $field['name'] == 'group_main_site') {
+			$args['switch_to_blog'] = true;
+		}
+		return $args;
+	}
+
+	/**
+	 * Checks to see if the get_term request should be switched to the primary blog, based on a previous filter
+	 * that marks a special flag. If so, overwrite the terms passed in with a new query after switching to blog 1.
+	 * @param $terms
+	 * @param $taxonomies
+	 * @param $args
+	 *
+	 * @return int|WP_Error|WP_Term[]
+	 */
+	static function people_group_switch_to_blog($terms, $taxonomies, $args) {
+		if (isset($args['switch_to_blog'])){
+
+			// remove this filter, or we'd end up with an infinite recursion when this get_terms filter runs get_terms.
+			remove_action('get_terms', array('ucf_people_directory_acf_pro_fields','people_group_switch_to_blog'), 20);
+
+			switch_to_blog(1);
+			$terms = get_terms($args);
+			restore_current_blog();
+
+			add_filter('get_terms', array('ucf_people_directory_acf_pro_fields','people_group_switch_to_blog'), 20, 3);
+		}
+
+		return $terms;
+	}
+
 }
 
 new ucf_people_directory_acf_pro_fields();

@@ -1,7 +1,7 @@
 <?php
 
 class ucf_people_directory_shortcode {
-	const version               = "2.9.0"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "3.0.0"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -10,6 +10,7 @@ class ucf_people_directory_shortcode {
 
 	const taxonomy_name        = 'people_group';
 	const acf_filter_term_name = 'specific_terms';
+	const acf_filter_term_name_main_site = 'specific_terms_main_site';
 	const GET_param_group      = 'group_search'; // group or category person is in
 	const GET_param_name       = 'name_search'; // restrict to profiles matching the user text
 
@@ -105,6 +106,9 @@ class ucf_people_directory_shortcode {
 
 		$obj_shortcode_attributes = new ucf_people_directory_shortcode_attributes();
 
+		if ($obj_shortcode_attributes->switch_to_main_site){
+			switch_to_blog(1);
+		}
 		// wrapper div. special class if not showing cards.
 		if ( $obj_shortcode_attributes->show_contacts ) {
 			$obj_shortcode_attributes->replacement_data .= "<div class='ucf-people-directory'>";
@@ -149,6 +153,10 @@ class ucf_people_directory_shortcode {
 		}
 
 		$obj_shortcode_attributes->replacement_data .= "</div>";
+
+		if ($obj_shortcode_attributes->switch_to_main_site){
+			restore_current_blog();
+		}
 
 		return $obj_shortcode_attributes->replacement_data;
 	}
@@ -243,6 +251,7 @@ class ucf_people_directory_shortcode {
 				// fallback to title sort (first name, but oh well) if the sort field is missing.
 			),
 			'meta_key'       => self::acf_sort_key,
+			'switch_to_blog' => get_field('switch_to_main_site', get_the_ID())
 			//'order'          => 'ASC',
 		);
 
@@ -779,6 +788,10 @@ class ucf_people_directory_shortcode {
 			$get_terms_arguments[ 'parent' ] = 0; // only show top level groups - we'll get the children later for formatting
 		}
 
+//		if ($shortcode_attributes->switch_to_main_site){
+//			$get_terms_arguments[ 'switch_to_blog'] = true;
+//		}
+
 		$people_groups_terms_top_level = new WP_Term_Query( $get_terms_arguments );
 
 		if ( ! $current_term ) {
@@ -1046,6 +1059,9 @@ class ucf_people_directory_shortcode_attributes {
 	/** @var integer number of people to show per page */
 	public $posts_per_page = ucf_people_directory_shortcode::posts_per_page;
 
+	/** @var bool Whether to pull from the current subsite or from the main blog */
+	public $switch_to_main_site = false;
+
 	/** @var string|void collision prevention - generate random bytes to prevent multiple directory blocks on the same page from having the same #id */
 	public $directory_id;
 
@@ -1066,6 +1082,10 @@ class ucf_people_directory_shortcode_attributes {
 	 * deductions.
 	 */
 	public function __construct() {
+		$this->switch_to_main_site = get_field( 'switch_to_main_site') ;
+		if ($this->switch_to_main_site){
+			switch_to_blog(1);
+		}
 		$this->show_search_bar = ( get_field( 'show_search_bar' ) || get_field( 'show_search_bar' ) === null );
 		$this->initialize_editor_specified_groups();
 		$this->initialize_user_specified_people_groups();
@@ -1088,16 +1108,26 @@ class ucf_people_directory_shortcode_attributes {
 
 		$this->directory_id = "menu-directory-departments-" . bin2hex( random_bytes( 8 ) ); // prevent #id collisions by generating a different id for each directory block. changes on each page load, but it isn't referenced in css.
 		$this->set_transient_name();
+		if ($this->switch_to_main_site){
+			restore_current_blog();
+		}
 	}
 
 	/**
 	 * Gets the editor specified groups from the database.
 	 */
 	protected function initialize_editor_specified_groups() {
-		if ( get_field( 'filtered' ) && have_rows( ucf_people_directory_shortcode::acf_filter_term_name ) ) {
-			while ( have_rows( ucf_people_directory_shortcode::acf_filter_term_name ) ) {
+		if ($this->switch_to_main_site){
+			$acf_filter_term_name = ucf_people_directory_shortcode::acf_filter_term_name_main_site;
+			$acf_filter_subfield_name = 'group_main_site';
+		} else {
+			$acf_filter_term_name = ucf_people_directory_shortcode::acf_filter_term_name;
+			$acf_filter_subfield_name = 'group';
+		}
+		if ( get_field( 'filtered' ) && have_rows( $acf_filter_term_name ) ) {
+			while ( have_rows( $acf_filter_term_name ) ) {
 				the_row();
-				$group                            = get_sub_field( 'group' );
+				$group                            = get_sub_field($acf_filter_subfield_name);
 				$this->editor_people_groups[]     = $group->slug;
 				$this->editor_people_groups_ids[] = $group->term_id;
 			}
