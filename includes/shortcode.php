@@ -1,7 +1,7 @@
 <?php
 
 class ucf_people_directory_shortcode {
-	const version               = "3.0.0"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "3.0.1"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -177,7 +177,7 @@ class ucf_people_directory_shortcode {
 	public static function search_bar_html( $shortcode_attributes ) {
 		$html_search_bar  = '';
 		$name_search      = self::GET_param_name;
-		$current_page_url = wp_get_canonical_url();
+		$current_page_url = $shortcode_attributes->canonical_url;
 		$html_search_bar  .= "
         <div class='searchbar'>
             <form id='searchform' action='{$current_page_url}' method='get'>
@@ -771,7 +771,7 @@ class ucf_people_directory_shortcode {
 	public static function people_group_list_html( $shortcode_attributes ) {
 		$html_people_group_list = '';
 
-		$current_page_url = wp_get_canonical_url();
+		$current_page_url = $shortcode_attributes->canonical_url;
 
 		$current_term = $shortcode_attributes->people_group_slug;
 
@@ -1059,6 +1059,13 @@ class ucf_people_directory_shortcode_attributes {
 	/** @var integer number of people to show per page */
 	public $posts_per_page = ucf_people_directory_shortcode::posts_per_page;
 
+	/**
+	 * The subsite canonical url. Useful when switching blogs for the main profiles to still print out
+	 * the subsite url in the link, for pagination and group filters.
+	 * @var string
+	 */
+	public $canonical_url;
+
 	/** @var bool Whether to pull from the current subsite or from the main blog */
 	public $switch_to_main_site = false;
 
@@ -1082,6 +1089,9 @@ class ucf_people_directory_shortcode_attributes {
 	 * deductions.
 	 */
 	public function __construct() {
+
+		// before switching to blog, save the subsite canonical url in order to print out the correct urls for filtering.
+		$this->canonical_url = wp_get_canonical_url();
 		$this->switch_to_main_site = get_field( 'switch_to_main_site') ;
 		if ($this->switch_to_main_site){
 			switch_to_blog(1);
