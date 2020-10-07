@@ -73,6 +73,25 @@ class ucf_people_directory_acf_pro_fields {
 							'ui_on_text'        => 'Visible',
 							'ui_off_text'       => 'Hidden',
 						),
+						((get_current_blog_id() !== 1) ? array(
+							'key'               => 'field_5e72817c085cd',
+							'label'             => 'Pull from COM directory',
+							'name'              => 'switch_to_main_site',
+							'type'              => 'true_false',
+							'instructions'      => '',
+							'required'          => 0,
+							'conditional_logic' => 0,
+							'wrapper'           => array(
+								'width' => '',
+								'class' => '',
+								'id'    => '',
+							),
+							'message'           => 'Show profiles from COM main directory instead of subsite profiles.',
+							'default_value'     => 0,
+							'ui'                => 1,
+							'ui_on_text'       => 'COM',
+							'ui_off_text'        => 'Subsite',
+						) : null),
 						array(
 							'key'               => 'field_5e722eaa23422',
 							'label'             => 'Filtered directory',
@@ -148,7 +167,7 @@ class ucf_people_directory_acf_pro_fields {
 								),
 							),
 						),
-						array(
+						((get_current_blog_id() !== 1) ? array(
 							'key'               => 'field_5c8136ee0c0f7',
 							'label'             => 'People Directory Groups',
 							'name'              => 'specific_terms_main_site',
@@ -207,7 +226,7 @@ class ucf_people_directory_acf_pro_fields {
 									'multiple'          => 0,
 								),
 							),
-						),
+						) : null),
 						array(
 							'key'               => 'field_5e722eaa2347a',
 							'label'             => 'Initial view',
@@ -267,25 +286,6 @@ class ucf_people_directory_acf_pro_fields {
 							'max'               => 100,
 							'step'              => 1,
 						),
-						((get_current_blog_id() !== 1) ? array(
-							'key'               => 'field_5e72817c085cd',
-							'label'             => 'Pull from COM directory',
-							'name'              => 'switch_to_main_site',
-							'type'              => 'true_false',
-							'instructions'      => '',
-							'required'          => 0,
-							'conditional_logic' => 0,
-							'wrapper'           => array(
-								'width' => '',
-								'class' => '',
-								'id'    => '',
-							),
-							'message'           => 'Show profiles from COM main directory instead of subsite profiles.',
-							'default_value'     => 0,
-							'ui'                => 1,
-							'ui_on_text'       => 'COM',
-							'ui_off_text'        => 'Subsite',
-						) : null),
 					),
 					'location'              => array(
 						array(
