@@ -1,7 +1,7 @@
 <?php
 
 class ucf_people_directory_shortcode {
-	const version               = "3.0.2"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "3.0.3"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -185,10 +185,10 @@ class ucf_people_directory_shortcode {
                     class='searchbar' 
                     type='text' 
                     name='{$name_search}' 
-                    placeholder='Search by Name' 
+                    placeholder='Search by Name, Specialty, or Keyword' 
                     onfocus='this.placeholder = \"\" '
-                    onblur='this.placeholder = \"Search by Name\"'
-                    value='{$shortcode_attributes->search_by_name}'
+                    onblur='this.placeholder = \"Search by Name, Specialty, or Keyword\"'
+                    value='{$shortcode_attributes->search_by_name_title_postcontent}'
                 />
                 <input 
                     class='searchsubmit'
@@ -232,7 +232,7 @@ class ucf_people_directory_shortcode {
 			'posts_per_page' => $shortcode_attributes->posts_per_page,
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
 			'post_status'    => 'publish',
-			's'              => $shortcode_attributes->search_by_name,
+			's'              => $shortcode_attributes->search_by_name_title_postcontent,
 			/*'meta_query'     => array( // slow, but works for people that lack the sort key. profile migrator should have fixed that bug, though.
 				'relation' => 'OR',
 				// need to have this meta query in order to allow people that lack this meta key to still be included in results
@@ -351,7 +351,7 @@ class ucf_people_directory_shortcode {
 			'post_type'        => 'person',
 			// 'person' is a post type defined in ucf-people-cpt
 			'post_status'    => 'publish',
-			's'                => $shortcode_attributes->search_by_name,
+			's'                => $shortcode_attributes->search_by_name_title_postcontent,
 			'orderby'          => 'meta_value',
 			'meta_key'         => self::acf_sort_key,
 			// we still order by person name. if weights are equal, names should be sorted.
@@ -433,7 +433,7 @@ class ucf_people_directory_shortcode {
 			'posts_per_page' => - 1,
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
 			'post_status'    => 'publish',
-			's'              => $shortcode_attributes->search_by_name,
+			's'              => $shortcode_attributes->search_by_name_title_postcontent,
 			'orderby'        => 'meta_value',
 			'meta_key'       => self::acf_sort_key,
 			'order'          => 'ASC',
@@ -800,7 +800,7 @@ class ucf_people_directory_shortcode {
 				// otherwise, 'all groups' shouldn't be shown, as it's confusing to have a link to 'all groups' but then not see any contacts when clicked.
 				$html_people_group_list .= self::term_list_entry( "All Groups", $current_page_url, null, 'reset active' );
 			} else {
-				if ( $shortcode_attributes->search_by_name ) {
+				if ( $shortcode_attributes->search_by_name_title_postcontent ) {
 					// show the reset filter link when a user searched by name.
 					$html_people_group_list .= self::term_list_entry( "Reset Filters", $current_page_url, null, 'reset' );
 				} else {
@@ -1051,7 +1051,7 @@ class ucf_people_directory_shortcode_attributes {
 	public $weighted_category_id;
 
 	/** @var string user specified search string */
-	public $search_by_name = '';
+	public $search_by_name_title_postcontent = '';
 
 	/** @var integer current page number */
 	public $paged = 1;
@@ -1100,9 +1100,9 @@ class ucf_people_directory_shortcode_attributes {
 		$this->initialize_editor_specified_groups();
 		$this->initialize_user_specified_people_groups();
 		$this->initialize_weighted_category();
-		$this->search_by_name = ( get_query_var( ucf_people_directory_shortcode::GET_param_name ) ) ? get_query_var( ucf_people_directory_shortcode::GET_param_name ) : '';
+		$this->search_by_name_title_postcontent = ( get_query_var( ucf_people_directory_shortcode::GET_param_name ) ) ? get_query_var( ucf_people_directory_shortcode::GET_param_name ) : '';
 
-		if ( ( $this->people_group_slug != '' ) || ( $this->search_by_name != '' ) ) { // user has searched, or the user or page owner has specified a group. show the contacts.
+		if ( ( $this->people_group_slug != '' ) || ( $this->search_by_name_title_postcontent != '' ) ) { // user has searched, or the user or page owner has specified a group. show the contacts.
 			$this->show_contacts = true;
 		}
 
@@ -1251,7 +1251,7 @@ class ucf_people_directory_shortcode_attributes {
 		} else {
 			$category = implode( "+", $this->editor_people_groups );
 		}
-		$transient_name = md5( $category . $this->search_by_name . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value . ucf_people_directory_shortcode::version );
+		$transient_name = md5( $category . $this->search_by_name_title_postcontent . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value . ucf_people_directory_shortcode::version );
 
 		$this->transient_name_cards              = substr( $transient_name_prefix . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
 		$this->transient_name_wp_query_max_pages = substr( $transient_name_prefix . 'pages-' . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
