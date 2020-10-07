@@ -185,9 +185,9 @@ class ucf_people_directory_shortcode {
                     class='searchbar' 
                     type='text' 
                     name='{$name_search}' 
-                    placeholder='Search by Name, Specialty, or Keyword' 
+                    placeholder='Name or Keyword'
                     onfocus='this.placeholder = \"\" '
-                    onblur='this.placeholder = \"Search by Name, Specialty, or Keyword\"'
+                    onblur='this.placeholder = \"Name or Keyword\"'
                     value='{$shortcode_attributes->search_by_name_title_postcontent}'
                 />
                 <input 
