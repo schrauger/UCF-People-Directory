@@ -1,7 +1,7 @@
 <?php
 
 class ucf_people_directory_shortcode {
-	const version               = "3.0.4"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "3.0.5"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
