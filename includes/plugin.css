@@ -115,6 +115,4 @@ Individual contact listing within staff directory
   .profiles-list .person {
     flex-wrap: wrap; }
     .profiles-list .person div.photo {
-      width: 100%; }
-      .profiles-list .person div.photo a {
-        background-position: center -80px; } }
+      width: 100%; } }
