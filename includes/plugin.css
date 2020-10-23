@@ -54,11 +54,11 @@ Individual contact listing within staff directory
         width: 200px;
         color: #000;
         padding: 5px; }
-      .profiles-list .person .details .content .specialization h4 {
-        display: none; }
-      .profiles-list .person .details .content .degree,
-      .profiles-list .person .details .content .appt-level {
-        display: none; }
+      .profiles-list .person .details .content h4 {
+        font-size: 1em; }
+      .profiles-list .person .details .content h4, .profiles-list .person .details .content div {
+        display: inline-block;
+        padding: 0.3rem .2rem 0 0; }
 
 .ucf-people-directory .people_groups {
   float: right;
