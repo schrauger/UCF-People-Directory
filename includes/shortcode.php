@@ -1,7 +1,8 @@
 <?php
 
+
 class ucf_people_directory_shortcode {
-	const version               = "3.0.6.1"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "3.0.7"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -135,8 +136,10 @@ class ucf_people_directory_shortcode {
 				$fresh_data                                 = self::profiles_html( $wp_query, $obj_shortcode_attributes );
 				$obj_shortcode_attributes->replacement_data .= $fresh_data;
 				$wp_query_max_pages                         = $wp_query->max_num_pages;
-				set_transient( $obj_shortcode_attributes->transient_name_cards, gzcompress( $fresh_data ), WP_FS__TIME_WEEK_IN_SEC * 5 ); // 5 WEEK expiration. will also expire when any person is added/updated
-				set_transient( $obj_shortcode_attributes->transient_name_wp_query_max_pages, $wp_query_max_pages, WP_FS__TIME_WEEK_IN_SEC * 5 );
+
+				$seconds_per_week = 60 * 60 * 24 * 7;
+				set_transient( $obj_shortcode_attributes->transient_name_cards, gzcompress( $fresh_data ), $seconds_per_week * 5 ); // 5 WEEK expiration. will also expire when any person is added/updated
+				set_transient( $obj_shortcode_attributes->transient_name_wp_query_max_pages, $wp_query_max_pages, $seconds_per_week * 5 );
 				wp_reset_postdata();
 			}
 
