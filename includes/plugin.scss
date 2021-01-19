@@ -8,10 +8,6 @@ Search bar for staff directory
 Individual contact listing within staff directory
 **/
 
-.publish {
-	overflow: auto;
-}
-
 .profiles-list {
 
 	float: left;
@@ -103,6 +99,10 @@ Individual contact listing within staff directory
 }
 
 .ucf-people-directory {
+
+	.publish {
+		overflow: auto;
+	}
 
 	.people_groups {
 		float: right;

@@ -4,9 +4,6 @@ Search bar for staff directory
 /**
 Individual contact listing within staff directory
 **/
-.publish {
-  overflow: auto; }
-
 .profiles-list {
   float: left;
   width: 70%; }
@@ -60,6 +57,9 @@ Individual contact listing within staff directory
         display: inline-block;
         padding: 0.3rem .2rem 0 0; }
 
+.ucf-people-directory .publish {
+  overflow: auto; }
+
 .ucf-people-directory .people_groups {
   float: right;
   width: 25%; }
@@ -93,6 +93,7 @@ Individual contact listing within staff directory
       .ucf-people-directory .people_groups .list li a[aria-expanded="true"] .fa-angle-down {
         transform: scaleY(-1);
         transform-origin: center center; }
+
 .ucf-people-directory.no-card-view .people_groups {
   float: none;
   margin-top: 25px;
@@ -115,5 +116,3 @@ Individual contact listing within staff directory
     flex-wrap: wrap; }
     .profiles-list .person div.photo {
       width: 100%; } }
-
-/*# sourceMappingURL=plugin.css.map */
