@@ -2,7 +2,7 @@
 
 
 class ucf_people_directory_shortcode {
-	const version               = "3.0.8"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "3.0.9"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -778,7 +778,6 @@ class ucf_people_directory_shortcode {
 
 		$current_term = $shortcode_attributes->people_group_slug;
 
-
 		$get_terms_arguments = array(
 			'taxonomy'   => self::taxonomy_name,
 			//'hide_empty' => true, // hide empty groups, even if specified by editor
@@ -867,16 +866,19 @@ class ucf_people_directory_shortcode {
 	 */
 	public static function term_list_entry( $title, $current_page_url, $slug, $class = 'parent' ) {
 		$term_url = "";
-		$term = get_term_by('slug', $slug, ucf_people_directory_shortcode::taxonomy_name);
+		if ($slug) {
+			$term = get_term_by( 'slug', $slug, ucf_people_directory_shortcode::taxonomy_name );
 
-		$external_set = get_term_meta($term->term_id, 'external-link', true);
-		if ($external_set){
-			$term_url = get_term_meta($term->term_id, 'external-link-url', true);
-		}
+			$external_set = get_term_meta( $term->term_id, 'external-link', true );
+			if ( $external_set ) {
+				$term_url = get_term_meta( $term->term_id, 'external-link-url', true );
+			}
 
-		$count = $term->count;
-		if (!$term_url && $count == 0){
-			return ""; // don't show any groups that are unused, except for those marked as external with a link defined.
+			$count = $term->count;
+
+			if ( ! $term_url && $count == 0 ) {
+				return ""; // don't show any groups that are unused, except for those marked as external with a link defined.
+			}
 		}
 
 		if (!$term_url){
@@ -1157,7 +1159,6 @@ class ucf_people_directory_shortcode_attributes {
 		if ( get_query_var( ucf_people_directory_shortcode::GET_param_group ) ) {
 			// user specified a group to filter to
 			$u_people_group = get_query_var( ucf_people_directory_shortcode::GET_param_group ); // possibly unsafe value. check against allowed values
-
 			$matching_people_group_obj = get_term_by( 'slug', $u_people_group, ucf_people_directory_shortcode::taxonomy_name );
 			if ( $matching_people_group_obj ) {
 				if ( $this->editor_people_groups ) {
@@ -1168,7 +1169,7 @@ class ucf_people_directory_shortcode_attributes {
 						if ( $editor_group_slug === $u_people_group ) {
 							// user filter equals one of the root editor groups
 							$this->people_group_slug = $u_people_group;
-						} elseif ( term_is_ancestor_of( get_term_by( 'slug', $editor_group_slug ), $matching_people_group_obj, ucf_people_directory_shortcode::taxonomy_name ) ) {
+						} elseif ( term_is_ancestor_of( get_term_by( 'slug', $editor_group_slug, ucf_people_directory_shortcode::taxonomy_name ), $matching_people_group_obj, ucf_people_directory_shortcode::taxonomy_name ) ) {
 							// user filter equals a descendent of one of the root editor groups
 							$this->people_group_slug = $u_people_group;
 						} else {
