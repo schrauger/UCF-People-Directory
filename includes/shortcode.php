@@ -2,18 +2,19 @@
 
 
 class ucf_people_directory_shortcode {
-	const version               = "3.0.9"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "3.1.0"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
 	const posts_per_page        = '10'; // number of profiles to list per page when paginating
 	const taxonomy_categories   = ''; // slug for the 'categories' taxonomy
 
-	const taxonomy_name        = 'people_group';
-	const acf_filter_term_name = 'specific_terms';
+	const taxonomy_name                  = 'people_group';
+	const acf_filter_term_name           = 'specific_terms';
 	const acf_filter_term_name_main_site = 'specific_terms_main_site';
-	const GET_param_group      = 'group_search'; // group or category person is in
-	const GET_param_name       = 'name_search'; // restrict to profiles matching the user text
+	const GET_param_group                = 'group_search'; // group or category person is in
+	const GET_param_keyword              = 'search'; // restrict to profiles matching the user text
+	const GET_param_search_type          = 'search_type'; // type of search being run (name/bio OR name/specialty)
 
 	const acf_sort_key = 'person_orderby_name';
 
@@ -36,6 +37,7 @@ class ucf_people_directory_shortcode {
 	}
 
 	/**
+	 * @deprecated
 	 * Adds the shortcode to the ckeditor dropdown menu
 	 *
 	 * @return array
@@ -62,7 +64,8 @@ class ucf_people_directory_shortcode {
 	 */
 	public static function add_query_vars_filter( $vars ) {
 		$vars[] = self::GET_param_group;
-		$vars[] = self::GET_param_name; // person name, from user submitted search text
+		$vars[] = self::GET_param_keyword; // person name, from user submitted search text
+		$vars[] = self::GET_param_search_type; // person name, from user submitted search text
 
 		return $vars;
 	}
@@ -179,7 +182,8 @@ class ucf_people_directory_shortcode {
 	 */
 	public static function search_bar_html( $shortcode_attributes ) {
 		$html_search_bar  = '';
-		$name_search      = self::GET_param_name;
+		$keyword_search      = self::GET_param_keyword;
+		$search_type         = self::GET_param_search_type;
 		$current_page_url = $shortcode_attributes->canonical_url;
 		$html_search_bar  .= "
         <div class='searchbar'>
@@ -187,11 +191,17 @@ class ucf_people_directory_shortcode {
                 <input 
                     class='searchbar' 
                     type='text' 
-                    name='{$name_search}' 
-                    placeholder='Name or Keyword'
+                    name='{$keyword_search}' 
+                    placeholder='{$shortcode_attributes->get_search_bar_placeholder_text()}'
                     onfocus='this.placeholder = \"\" '
-                    onblur='this.placeholder = \"Name or Keyword\"'
-                    value='{$shortcode_attributes->search_by_name_title_postcontent}'
+                    onblur='this.placeholder = \"{$shortcode_attributes->get_search_bar_placeholder_text()}\"'
+                    value='{$shortcode_attributes->search_content}'
+                />
+                <input
+                	class='hidden'
+                	type='hidden'
+                	name='{$search_type}'
+                	value='{$shortcode_attributes->search_bar_type}'
                 />
                 <input 
                     class='searchsubmit'
@@ -235,7 +245,6 @@ class ucf_people_directory_shortcode {
 			'posts_per_page' => $shortcode_attributes->posts_per_page,
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
 			'post_status'    => 'publish',
-			's'              => $shortcode_attributes->search_by_name_title_postcontent,
 			/*'meta_query'     => array( // slow, but works for people that lack the sort key. profile migrator should have fixed that bug, though.
 				'relation' => 'OR',
 				// need to have this meta query in order to allow people that lack this meta key to still be included in results
@@ -257,6 +266,24 @@ class ucf_people_directory_shortcode {
 			'switch_to_blog' => get_field('switch_to_main_site', get_the_ID())
 			//'order'          => 'ASC',
 		);
+
+		switch ($shortcode_attributes->search_bar_type){
+			case $shortcode_attributes::SEARCH_STANDARD:
+				//$query_args['s'] = $shortcode_attributes->search_content;
+				break;
+			case $shortcode_attributes::SEARCH_SPECIALIZED:
+				$query_args['meta_query'] = array(
+					'key' => 'specialties',
+					'value' => $shortcode_attributes->search_content,
+					'compare' => 'LIKE'
+				);
+				$query_args['search_prod_title'] = $shortcode_attributes->search_content;
+				add_filter( 'posts_where', array('ucf_people_directory_shortcode', 'title_filter_OR'), 10, 2);
+				break;
+			default:
+				$query_args['s'] = $shortcode_attributes->search_content;
+				break;
+		}
 
 		// ## Query 2 - Run if single category, and we found weighted people for that category.
 		if ( sizeof( $weighted_people ) > 0 ) {
@@ -294,10 +321,43 @@ class ucf_people_directory_shortcode {
 
 		$return_query = new WP_Query( $query_args ); // Query 3
 
+		remove_filter( 'posts_where', array('ucf_people_directory_shortcode', 'title_filter_OR'), 10, 2 ); // remove custom filter (if not set, it doesn't matter)
+
+
 		// removing this for now. causes query to run more slowly, and initial bug with missing field was fixed in profile migrator
 		//remove_filter( 'posts_orderby', array( 'ucf_people_directory_shortcode', 'override_sql_order' ) );
 
 		return $return_query;
+	}
+
+	/**
+	 * For specialties searches, it uses an ACF repeater field. Built-in WordPress meta queries
+	 * can't search all these fields, so we modify the WHERE clause of sql queries, look for our
+	 * dollar sign string (just a random character) and replace it with a percent sign.
+	 * This lets wordpress search for any meta key that starts with our repeater field name,
+	 * which is how acf stores the subfields of repeater fields.
+	 * @param $where
+	 *
+	 * @return mixed
+	 */
+	public static function override_sql_where_for_specialty_repeater_field($where){
+		$where = str_replace( "meta_key = 'specialties_array_$", "meta_key LIKE 'specialties_array_%", $where );
+		return $where;
+	}
+
+	/**
+	 * WordPress doesn't let you search by JUST the title, so this function lets you search just that field and not the content.
+	 * @param $where
+	 * @param $wp_query
+	 *
+	 * @return string
+	 */
+	function title_filter_OR( $where, &$wp_query ){
+		global $wpdb;
+		if ( $search_term = $wp_query->get( 'search_prod_title' ) ) {
+			$where .= ' OR ' . $wpdb->posts . '.post_title LIKE \'%' . esc_sql( like_escape( $search_term ) ) . '%\'';
+		}
+		return $where;
 	}
 
 	/**
@@ -354,7 +414,7 @@ class ucf_people_directory_shortcode {
 			'post_type'        => 'person',
 			// 'person' is a post type defined in ucf-people-cpt
 			'post_status'    => 'publish',
-			's'                => $shortcode_attributes->search_by_name_title_postcontent,
+			's'                => $shortcode_attributes->search_content,
 			'orderby'          => 'meta_value',
 			'meta_key'         => self::acf_sort_key,
 			// we still order by person name. if weights are equal, names should be sorted.
@@ -436,7 +496,7 @@ class ucf_people_directory_shortcode {
 			'posts_per_page' => - 1,
 			'post_type'      => 'person', // 'person' is a post type defined in ucf-people-cpt
 			'post_status'    => 'publish',
-			's'              => $shortcode_attributes->search_by_name_title_postcontent,
+			's'              => $shortcode_attributes->search_content,
 			'orderby'        => 'meta_value',
 			'meta_key'       => self::acf_sort_key,
 			'order'          => 'ASC',
@@ -802,7 +862,7 @@ class ucf_people_directory_shortcode {
 				// otherwise, 'all groups' shouldn't be shown, as it's confusing to have a link to 'all groups' but then not see any contacts when clicked.
 				$html_people_group_list .= self::term_list_entry( "All Groups", $current_page_url, null, 'reset active' );
 			} else {
-				if ( $shortcode_attributes->search_by_name_title_postcontent ) {
+				if ( $shortcode_attributes->search_content ) {
 					// show the reset filter link when a user searched by name.
 					$html_people_group_list .= self::term_list_entry( "Reset Filters", $current_page_url, null, 'reset' );
 				} else {
@@ -1028,6 +1088,15 @@ class ucf_people_directory_shortcode_attributes {
 	/** @var bool whether to show the search bar or not */
 	public $show_search_bar = true;
 
+	const SEARCH_STANDARD = "standard";
+	const SEARCH_SPECIALIZED = "specialized";
+
+	/** @var string type of search bar to show (currently, standard and specialized). defines what fields to search on */
+	public $search_bar_type;
+
+	/** @var string user specified search string */
+	public $search_content = '';
+
 	/** @var bool whether to show the actual contact cards or not */
 	public $show_contacts = false;
 
@@ -1054,9 +1123,6 @@ class ucf_people_directory_shortcode_attributes {
 
 	/** @var string Calculated. If user entered a category, use that. Else if editor has a single category, use that. Else, null. */
 	public $weighted_category_id;
-
-	/** @var string user specified search string */
-	public $search_by_name_title_postcontent = '';
 
 	/** @var integer current page number */
 	public $paged = 1;
@@ -1101,13 +1167,17 @@ class ucf_people_directory_shortcode_attributes {
 		if ($this->switch_to_main_site){
 			switch_to_blog(1);
 		}
-		$this->show_search_bar = ( get_field( 'show_search_bar' ) || get_field( 'show_search_bar' ) === null );
+
+		$this->initialize_search_bar();
 		$this->initialize_editor_specified_groups();
 		$this->initialize_user_specified_people_groups();
 		$this->initialize_weighted_category();
-		$this->search_by_name_title_postcontent = ( get_query_var( ucf_people_directory_shortcode::GET_param_name ) ) ? get_query_var( ucf_people_directory_shortcode::GET_param_name ) : '';
+		$this->search_content      = ( get_query_var( ucf_people_directory_shortcode::GET_param_keyword ) ) ? get_query_var( ucf_people_directory_shortcode::GET_param_keyword ) : '';
 
-		if ( ( $this->people_group_slug != '' ) || ( $this->search_by_name_title_postcontent != '' ) ) { // user has searched, or the user or page owner has specified a group. show the contacts.
+		if (
+			( $this->people_group_slug != '' )
+			|| ( $this->search_content != '' )
+		) { // user has searched, or the user or page owner has specified a group. show the contacts.
 			$this->show_contacts = true;
 		}
 
@@ -1126,6 +1196,56 @@ class ucf_people_directory_shortcode_attributes {
 		if ($this->switch_to_main_site){
 			restore_current_blog();
 		}
+	}
+
+	/**
+	 * Defines whether to show the search bar or not, and if so, what type.
+	 * Sets the options for the search bar. If advanced search options isn't enabled, default to standard.
+	 */
+	public function initialize_search_bar(){
+		// if enabled (or if undefined due to previous versions), show the search bar
+		$this->show_search_bar = ( get_field( 'show_search_bar' ) || get_field( 'show_search_bar' ) === null );
+
+		if ($this->show_search_bar) {
+			$advanced_options_enabled = get_field( 'advanced_search_bar_options' );
+			if ( $advanced_options_enabled ) {
+				if ( have_rows( 'search_bar_options' ) ) {
+					while ( have_rows( 'search_bar_options' ) ) {
+						the_row();
+						$search_type = get_sub_field( 'search_bar_type' );
+
+						// don't trust user input. match against known types, and set the variable to a match, or to the default for no match
+						switch ( $search_type ) {
+							case self::SEARCH_SPECIALIZED:
+								$this->search_bar_type = self::SEARCH_SPECIALIZED;
+								break;
+							case self::SEARCH_STANDARD:
+								$this->search_bar_type = self::SEARCH_STANDARD;
+								break;
+							default:
+								$this->search_bar_type = self::SEARCH_STANDARD;
+						}
+					}
+
+				}
+			} else {
+				$this->search_bar_type = self::SEARCH_STANDARD;
+			}
+		}
+	}
+
+	public function get_search_bar_placeholder_text(){
+		$return_text = "";
+		switch ($this->search_bar_type) {
+			case self::SEARCH_SPECIALIZED:
+				$return_text = "Name or specialty";
+				break;
+			case self::SEARCH_STANDARD:
+			default:
+			$return_text = "Name or keyword";
+				break;
+		}
+		return $return_text;
 	}
 
 	/**
@@ -1255,7 +1375,7 @@ class ucf_people_directory_shortcode_attributes {
 		} else {
 			$category = implode( "+", $this->editor_people_groups );
 		}
-		$transient_name = md5( $category . $this->search_by_name_title_postcontent . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value . ucf_people_directory_shortcode::version );
+		$transient_name = md5( $category . $this->search_content . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value . ucf_people_directory_shortcode::version );
 
 		$this->transient_name_cards              = substr( $transient_name_prefix . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
 		$this->transient_name_wp_query_max_pages = substr( $transient_name_prefix . 'pages-' . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234

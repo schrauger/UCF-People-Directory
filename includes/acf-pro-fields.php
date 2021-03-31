@@ -13,7 +13,8 @@ class ucf_people_directory_acf_pro_fields {
 	function __construct() {
 		add_action( 'acf/init', array( 'ucf_people_directory_acf_pro_fields', 'create_fields' ) );
 
-		// sort order override for people posttypes, used in directory sorting
+		// sort order override for people posttypes, used in directory sorting.
+		// also adds specialty search options
 		add_action( 'acf/init', array( 'ucf_people_directory_acf_pro_fields', 'extend_person_fields' ) );
 
 		// add 'limited' checkbox to people group taxonomy
@@ -72,6 +73,98 @@ class ucf_people_directory_acf_pro_fields {
 							'ui'                => 1,
 							'ui_on_text'        => 'Visible',
 							'ui_off_text'       => 'Hidden',
+						),
+						array(
+							'key' => 'field_60638e2a83d02',
+							'label' => 'Advanced search bar options',
+							'name' => 'advanced_search_bar_options',
+							'type' => 'true_false',
+							'instructions' => '',
+							'required' => 0,
+							'conditional_logic' => array(
+								array(
+									array(
+										'field' => 'field_5e727e5c02cb6',
+										'operator' => '==',
+										'value' => '1',
+									),
+								),
+							),
+							'wrapper' => array(
+								'width' => '',
+								'class' => '',
+								'id' => '',
+							),
+							'message' => '',
+							'default_value' => 0,
+							'ui' => 0,
+							'ui_on_text' => '',
+							'ui_off_text' => '',
+						),
+						array(
+							'key' => 'field_60638e0483d00',
+							'label' => 'Search bar options',
+							'name' => 'search_bar_options',
+							'type' => 'group',
+							'instructions' => '',
+							'required' => 0,
+							'conditional_logic' => array(
+								array(
+									array(
+										'field' => 'field_5e727e5c02cb6',
+										'operator' => '==',
+										'value' => '1',
+									),
+									array(
+										'field' => 'field_60638e2a83d02',
+										'operator' => '==',
+										'value' => '1',
+									),
+								),
+							),
+							'wrapper' => array(
+								'width' => '',
+								'class' => '',
+								'id' => '',
+							),
+							'layout' => 'block',
+							'sub_fields' => array(
+								array(
+									'key' => 'field_60638e4f83d03',
+									'label' => 'Search bar type',
+									'name' => 'search_bar_type',
+									'type' => 'button_group',
+									'instructions' => 'Which fields to search',
+									'required' => 0,
+									'conditional_logic' => array(
+										array(
+											array(
+												'field' => 'field_5e727e5c02cb6',
+												'operator' => '==',
+												'value' => '1',
+											),
+											array(
+												'field' => 'field_60638e2a83d02',
+												'operator' => '==',
+												'value' => '1',
+											),
+										),
+									),
+									'wrapper' => array(
+										'width' => '',
+										'class' => '',
+										'id' => '',
+									),
+									'choices' => array(
+										ucf_people_directory_shortcode_attributes::SEARCH_STANDARD => 'Name and Content',
+										ucf_people_directory_shortcode_attributes::SEARCH_SPECIALIZED => 'Name and Specialized Keyword',
+									),
+									'allow_null' => 0,
+									'default_value' => 'default',
+									'layout' => 'horizontal',
+									'return_format' => 'value',
+								),
+							),
 						),
 						((get_current_blog_id() !== 1) ? array(
 							'key'               => 'field_5e72817c085cd',
@@ -318,11 +411,13 @@ class ucf_people_directory_acf_pro_fields {
 
 	// Adds a group of fields that lets the user override sort order for directories. This lets them place
 	// specific people at the top of the list when specific departments are specified.
+	// Also adds a group of fields for defining specialty keywords for use with advanced directory searching.
 	static function extend_person_fields() {
-		$colleges_theme_acf_id_for_people = 'group_5953a81f683a8'; // defined in Colleges Theme (parent theme) in dev/acf-export.json.
+		//$colleges_theme_acf_id_for_people = 'group_5953a81f683a8'; // defined in Colleges Theme (parent theme) in dev/acf-export.json.
 		// unused. I tried altering the existing group to add our own fields, but it ended up overwriting them completely.
 		// possibly because those fields are defined in the database (via json import), whereas these are defined in php.
 		// https://support.advancedcustomfields.com/forums/topic/updating-field-settings-in-php/
+		// Instead, this just adds a separate grouping of fields on the page.
 
 		if ( function_exists( 'acf_add_local_field_group' ) ) {
 			acf_add_local_field_group(
@@ -439,6 +534,77 @@ class ucf_people_directory_acf_pro_fields {
 					'hide_on_screen'        => '',
 					'active'                => true,
 					'description'           => 'Custom sort order',
+				)
+			);
+			acf_add_local_field_group(
+				array(
+					'key'                   => 'group_605b9d94742b4',
+					'title'                 => 'Person fields - Specialty Search',
+					'fields'                => array(
+						array(
+							'key'               => 'field_6064e6a85ffc0',
+							'label'             => 'Enable Specialty Search Keywords',
+							'name'              => 'enable_specialty_search_keywords',
+							'type'              => 'true_false',
+							'instructions'      => 'Enabling this option will let you enter text for this profile for use in advanced directory searching. It will be used within directory listings that have enabled advanced search options to specifically search on this field.',
+							'required'          => 0,
+							'conditional_logic' => 0,
+							'wrapper'           => array(
+								'width' => '',
+								'class' => '',
+								'id'    => '',
+							),
+							'message'           => '',
+							'default_value'     => 0,
+							'ui'                => 1,
+							'ui_on_text'        => 'Enabled',
+							'ui_off_text'       => 'Disabled',
+						),
+						array(
+							'key'               => 'field_605b9d9bfc498',
+							'label'             => 'Specialties',
+							'name'              => 'specialties',
+							'type'              => 'textarea',
+							'instructions'      => '',
+							'required'          => 0,
+							'conditional_logic' => array(
+								array(
+									array(
+										'field'    => 'field_6064e6a85ffc0',
+										'operator' => '==',
+										'value'    => '1',
+									),
+								),
+							),
+							'wrapper'           => array(
+								'width' => '',
+								'class' => '',
+								'id'    => '',
+							),
+							'default_value'     => '',
+							'placeholder'       => '',
+							'maxlength'         => '',
+							'rows'              => '',
+							'new_lines'         => '',
+						),
+					),
+					'location'              => array(
+						array(
+							array(
+								'param'    => 'post_type',
+								'operator' => '==',
+								'value'    => 'person',
+							),
+						),
+					),
+					'menu_order'            => 0,
+					'position'              => 'normal',
+					'style'                 => 'default',
+					'label_placement'       => 'top',
+					'instruction_placement' => 'label',
+					'hide_on_screen'        => '',
+					'active'                => true,
+					'description'           => '',
 				)
 			);
 		}
