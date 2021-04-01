@@ -2,7 +2,7 @@
 
 
 class ucf_people_directory_shortcode {
-	const version               = "3.1.0"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "3.1.0.1"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -266,23 +266,25 @@ class ucf_people_directory_shortcode {
 			'switch_to_blog' => get_field('switch_to_main_site', get_the_ID())
 			//'order'          => 'ASC',
 		);
+		if ($shortcode_attributes->search_content){
+			switch ($shortcode_attributes->search_bar_type){
+				case $shortcode_attributes::SEARCH_STANDARD:
+					$query_args['s'] = $shortcode_attributes->search_content;
+					break;
+				case $shortcode_attributes::SEARCH_SPECIALIZED:
+					$query_args[ 'meta_query' ] = array(
+						'key'     => 'specialties',
+						'value'   => $shortcode_attributes->search_content,
+						'compare' => 'LIKE'
+					);
 
-		switch ($shortcode_attributes->search_bar_type){
-			case $shortcode_attributes::SEARCH_STANDARD:
-				//$query_args['s'] = $shortcode_attributes->search_content;
-				break;
-			case $shortcode_attributes::SEARCH_SPECIALIZED:
-				$query_args['meta_query'] = array(
-					'key' => 'specialties',
-					'value' => $shortcode_attributes->search_content,
-					'compare' => 'LIKE'
-				);
-				$query_args['search_prod_title'] = $shortcode_attributes->search_content;
-				add_filter( 'posts_where', array('ucf_people_directory_shortcode', 'title_filter_OR'), 10, 2);
-				break;
-			default:
-				$query_args['s'] = $shortcode_attributes->search_content;
-				break;
+					$query_args[ 'search_prod_title' ] = $shortcode_attributes->search_content;
+					add_filter( 'posts_where', array( 'ucf_people_directory_shortcode', 'title_filter_OR' ), 10, 2 );
+					break;
+				default:
+					$query_args['s'] = $shortcode_attributes->search_content;
+					break;
+			}
 		}
 
 		// ## Query 2 - Run if single category, and we found weighted people for that category.
