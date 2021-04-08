@@ -184,6 +184,7 @@ class ucf_people_directory_shortcode {
 		$html_search_bar  = '';
 		$keyword_search      = self::GET_param_keyword;
 		$search_type         = self::GET_param_search_type;
+		$current_cat	= ucfirst( get_query_var( ucf_people_directory_shortcode::GET_param_group ) );
 		$current_page_url = $shortcode_attributes->canonical_url;
 		$html_search_bar  .= "
         <div class='searchbar'>
@@ -212,6 +213,7 @@ class ucf_people_directory_shortcode {
                 />
             </form>
         </div>
+        <div class='current-section-notification'><small><i class=\"fa fa-user-circle-o icongrey\"></i> Currently Viewing: <strong>{$current_cat}</strong></small></div>
         ";
 
 		return $html_search_bar;
