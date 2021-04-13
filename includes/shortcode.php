@@ -2,7 +2,7 @@
 
 
 class ucf_people_directory_shortcode {
-	const version               = "3.1.0.2"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+	const version               = "3.1.2"; // current shortcode version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 	const shortcode_slug        = 'ucf_people_directory'; // the shortcode text entered by the user (inside square brackets)
 	const shortcode_name        = 'People Directory (deprecated - use blocks)';
 	const shortcode_description = 'Searchable directory of all people';
@@ -184,7 +184,11 @@ class ucf_people_directory_shortcode {
 		$html_search_bar  = '';
 		$keyword_search      = self::GET_param_keyword;
 		$search_type         = self::GET_param_search_type;
-		$current_cat	= ucfirst( get_query_var( ucf_people_directory_shortcode::GET_param_group ) );
+		$current_category_slug	= ucfirst( get_query_var( ucf_people_directory_shortcode::GET_param_group ) );
+		$current_category_wp_obj = "";
+		if ($current_category_slug) {
+			$current_category_wp_obj = get_term_by( 'slug', $current_category_slug, ucf_people_directory_shortcode::taxonomy_name );
+		}
 		$current_page_url = $shortcode_attributes->canonical_url;
 		$html_search_bar  .= "
         <div class='searchbar'>
@@ -213,8 +217,12 @@ class ucf_people_directory_shortcode {
                 />
             </form>
         </div>
-        <div class='current-section-notification'><small><i class=\"fa fa-user-circle-o icongrey\"></i> Currently Viewing: <strong>{$current_cat}</strong></small></div>
         ";
+		if ($current_category_wp_obj) {
+			$html_search_bar .= "
+        <div class='current-section-notification'><small><i class=\"fa fa-user-circle-o icongrey\"></i> Currently Viewing: <strong>{$current_category_wp_obj->name}</strong></small></div>
+        ";
+		}
 
 		return $html_search_bar;
 	}
