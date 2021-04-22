@@ -367,7 +367,16 @@ class ucf_people_directory_shortcode {
 	function title_filter_OR( $where, &$wp_query ){
 		global $wpdb;
 		if ( $search_term = $wp_query->get( 'search_prod_title' ) ) {
-			$where .= ' OR ' . $wpdb->posts . '.post_title LIKE \'%' . esc_sql( like_escape( $search_term ) ) . '%\'';
+			$safe_search = esc_sql( like_escape( $search_term ) );
+			$where .= "
+			OR (
+				{$wpdb->posts}.post_title LIKE '%{$safe_search}%'
+				AND
+				{$wpdb->posts}.post_type='person'
+				AND
+				{$wpdb->posts}.post_status='publish'
+			)";
+			// make sure to restrict to person and published, or else it will return any post with that title
 		}
 		return $where;
 	}
