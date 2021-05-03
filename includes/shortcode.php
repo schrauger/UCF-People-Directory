@@ -833,12 +833,15 @@ class ucf_people_directory_shortcode {
 
 		$html_people_groups     .= "
             <div class='people_groups'>
-                <h3 class='title yellow_underline'>Filter by</h3>
+                <h3 class='title yellow_underline' id='filter_top'>Filter by</h3>
                 <div class='list'>
                     <ul id='{$shortcode_attributes->directory_id}' class='menu'>
                         {$people_group_list_html}
                     </ul>
                 </div>
+                <a href='/directory/' class='badge badge-complementary'><i class='fa fa-user-circle-o icongrey'></i> View Full Directory</a>
+                <a href='#filter_top' class='badge badge-secondary'><i class='fa fa-chevron-circle-up icongrey'></i> Top of Listing</a>
+
             </div>
         ";
 

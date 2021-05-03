@@ -8,6 +8,24 @@ Individual contact listing within staff directory
   margin: 0 0 15px 0;
   color: #666; }
 
+.person-contact-container .btn {
+  width: 100%;
+  font-size: .8em; }
+
+.person-content .nav-tabs {
+  margin-bottom: 1.5rem;
+  border: none; }
+  .person-content .nav-tabs .nav-link {
+    margin: 0;
+    padding: 20px 10px;
+    background-color: #fcfcfc; }
+    .person-content .nav-tabs .nav-link.active {
+      border: none;
+      background-color: #ececec;
+      margin: 0; }
+    .person-content .nav-tabs .nav-link:hover {
+      margin: 0; }
+
 .profiles-list {
   float: left;
   width: 70%; }

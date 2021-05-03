@@ -13,6 +13,36 @@ Individual contact listing within staff directory
 	color: #666;
 }
 
+.person-contact-container {
+	.btn {
+		width: 100%;
+		font-size: .8em;
+	}
+}
+
+.person-content {
+	.nav-tabs {
+		margin-bottom: 1.5rem;
+		border: none;
+
+		.nav-link {
+			margin: 0;
+			padding: 20px 10px;
+			background-color: #fcfcfc;
+
+			&.active {
+				border: none;
+				background-color: #ececec;
+				margin: 0;
+			}
+
+			&:hover {
+				margin: 0;
+			}
+		}
+	}
+}
+
 .profiles-list {
 
 	float: left;
