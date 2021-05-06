@@ -27,6 +27,7 @@ if ( ! defined( 'WPINC' ) ) {
 include plugin_dir_path( __FILE__ ) . 'includes/acf-pro-fields.php';
 include plugin_dir_path( __FILE__ ) . 'includes/acf-pro-location-rules.php';
 include plugin_dir_path( __FILE__ ) . 'includes/shortcode.php';
+include plugin_dir_path( __FILE__ ) . 'includes/template-includer.php'; echo 'blah blah';
 //include plugin_dir_path( __FILE__ ) . 'includes/taxonomy.php';
 
 
