@@ -19,6 +19,7 @@ class ucf_people_directory_acf_pro_fields {
 
 		// single person search options
 		add_action( 'acf/init', array( 'ucf_people_directory_acf_pro_fields', 'single_person_search_fields' ) );
+		add_action( 'acf/init', array( 'ucf_people_directory_acf_pro_fields', 'single_person_subsite_search_fields' ) );
 
 		// add 'limited' checkbox to people group taxonomy
 		add_action( 'acf/init', array( 'ucf_people_directory_acf_pro_fields', 'people_group_meta_fields' ) );
@@ -673,6 +674,113 @@ class ucf_people_directory_acf_pro_fields {
 							                          'param' => 'options_page',
 							                          'operator' => '==',
 							                          'value' => 'ucf-people-directory-general-settings',
+						                          ),
+					                          ),
+				                          ),
+				                          'menu_order' => 0,
+				                          'position' => 'normal',
+				                          'style' => 'default',
+				                          'label_placement' => 'top',
+				                          'instruction_placement' => 'label',
+				                          'hide_on_screen' => '',
+				                          'active' => true,
+				                          'description' => '',
+			                          ));
+		}
+	}
+
+	static function single_person_subsite_search_fields() {
+		if ( function_exists( 'acf_add_local_field_group' ) ) {
+
+			acf_add_local_field_group(array(
+				                          'key' => 'group_60956e240d6b1',
+				                          'title' => 'Single Person Search',
+				                          'fields' => array(
+					                          array(
+						                          'key' => 'field_609572124542f',
+						                          'label' => 'Enable search bar',
+						                          'name' => 'ucf_people_directory_options_enable_search',
+						                          'type' => 'true_false',
+						                          'instructions' => 'Enables the search bar on top of every profile page.',
+						                          'required' => 0,
+						                          'conditional_logic' => 0,
+						                          'wrapper' => array(
+							                          'width' => '',
+							                          'class' => '',
+							                          'id' => '',
+						                          ),
+						                          'message' => '',
+						                          'default_value' => 0,
+						                          'ui' => 1,
+						                          'ui_on_text' => 'Enabled',
+						                          'ui_off_text' => 'Disabled',
+					                          ),
+					                          array(
+						                          'key' => 'field_60956e3b77082',
+						                          'label' => 'Main or Subsite Page',
+						                          'name' => 'ucf_people_directory_options_main_sub_switch',
+						                          'type' => 'true_false',
+						                          'instructions' => 'This page should have a directory block, and all searches coming from a single person\'s profile will redirect to this page and search within the directory defined on this page.',
+						                          'required' => 0,
+						                          'conditional_logic' => array(
+							                          array(
+								                          array(
+									                          'field' => 'field_609572124542f',
+									                          'operator' => '==',
+									                          'value' => '1',
+								                          ),
+							                          ),
+						                          ),
+						                          'wrapper' => array(
+							                          'width' => '',
+							                          'class' => '',
+							                          'id' => '',
+						                          ),
+						                          'message' => '',
+						                          'default_value' => 0,
+						                          'ui' => 1,
+						                          'ui_on_text' => 'This Subsite',
+						                          'ui_off_text' => 'COM Site',
+					                          ),
+					                          array(
+						                          'key' => 'field_60956e3b77081',
+						                          'label' => 'Target Page',
+						                          'name' => 'ucf_people_directory_options_target_page',
+						                          'type' => 'page_link',
+						                          'instructions' => 'This page should have a directory block, and all searches coming from a single person\'s profile will redirect to this page and search within the directory defined on this page.',
+						                          'required' => 1,
+						                          'conditional_logic' => array(
+							                          array(
+								                          array(
+									                          'field' => 'field_609572124542f',
+									                          'operator' => '==',
+									                          'value' => '1',
+								                          ),
+								                          array(
+									                          'field' => 'field_60956e3b77082',
+									                          'operator' => '==',
+									                          'value' => '1',
+								                          ),
+							                          ),
+						                          ),
+						                          'wrapper' => array(
+							                          'width' => '',
+							                          'class' => '',
+							                          'id' => '',
+						                          ),
+						                          'post_type' => '',
+						                          'taxonomy' => '',
+						                          'allow_null' => 0,
+						                          'allow_archives' => 1,
+						                          'multiple' => 0,
+					                          ),
+				                          ),
+				                          'location' => array(
+					                          array(
+						                          array(
+							                          'param' => 'options_page',
+							                          'operator' => '==',
+							                          'value' => 'ucf-people-directory-subsite-general-settings',
 						                          ),
 					                          ),
 				                          ),
