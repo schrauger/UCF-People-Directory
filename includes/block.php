@@ -7,7 +7,7 @@ include_once 'block-attributes.php';
 use WP_Query;
 use WP_Term_Query;
 
-const version               = "3.4.0"; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+const version               = "3.4.1"; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 const posts_per_page        = '10'; // number of profiles to list per page when paginating
 const taxonomy_categories   = ''; // slug for the 'categories' taxonomy
 
@@ -145,7 +145,7 @@ function replacement_print() {
 /**
  * Return a string of HTML for the search input form
  *
- * @param $block_attributes ucf_people_directory_block_attributes
+ * @param $block_attributes \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes
  *
  * @return string
  */
@@ -394,7 +394,7 @@ function override_sql_order( $orderby ) {
  * or two people are at the top, then another group next, and finally everyone else in the
  * category.
  *
- * @param ucf_people_directory_block_attributes $block_attributes
+ * @param \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes $block_attributes
  *
  * @return array
  */
@@ -482,7 +482,7 @@ function profiles_weighted_id_list( $block_attributes ) {
 /**
  * Gets an ordered list of profile ids, unsorted.
  *
- * @param ucf_people_directory_block_attributes $block_attributes
+ * @param \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes $block_attributes
  *
  * @return array
  */
@@ -588,7 +588,7 @@ function profiles_html( $wp_query, $block_attributes ) {
  * then a limited set of info is printed.
  */
 /**
- * @param ucf_people_directory_block_attributes $block_attributes
+ * @param \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes $block_attributes
  *
  * @return string
  */
@@ -758,7 +758,7 @@ function contact_info( $data, $class, $url = null, $title = null ) {
  * You should only run this when actually showing contact cards. No use in page buttons to view more of nothing.
  *
  * @param $wp_query             WP_Query
- * @param $block_attributes ucf_people_directory_block_attributes
+ * @param $block_attributes \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes
  *
  * @return string
  */
@@ -788,7 +788,7 @@ function pagination_html( $wp_query_total_pages, $block_attributes ) {
 /**
  * Html wrapper for people groups list html
  *
- * @param $block_attributes ucf_people_directory_block_attributes
+ * @param $block_attributes \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes
  *
  * @return string
  */
@@ -827,7 +827,7 @@ function people_groups_html( $block_attributes ) {
 /**
  * Sidebar with a list of people groups. Users can select a group to filter down to profiles only in that group.
  *
- * @param $block_attributes ucf_people_directory_block_attributes
+ * @param $block_attributes \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes
  *
  * @return string
  */
@@ -971,7 +971,7 @@ function term_list_entry( $title, $current_page_url, $slug, $class = 'parent' ) 
  * @param                                           $current_page_url
  * @param                                           $current_term
  * @param                                           $people_groups_terms_children
- * @param ucf_people_directory_block_attributes $block_attributes
+ * @param \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes $block_attributes
  *
  * @return string
  */

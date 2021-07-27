@@ -4,7 +4,7 @@ Plugin Name: UCF People Directory
 Description: Provides a directory for the UCF people custom post type
 
 ### Note - update version number here and in includes/shortcode.php
-Version: 3.4.0
+Version: 3.4.1
 ###
 
 Author: Stephen Schrauger
@@ -24,13 +24,10 @@ if ( ! defined( 'WPINC' ) ) {
 // https://www.domain.tld/directory/page/number - shows limited subset of all posts (doesn't filter by category)
 // https://www.domain.tld/directory/tag/page/number - might not work in wordpress. would show paginated, filtered results
 
-//include plugin_dir_path( __FILE__ ) . 'includes/common/tinymce.php';
-//include plugin_dir_path( __FILE__ ) . 'includes/common/shortcode-taxonomy.php';
 include_once plugin_dir_path( __FILE__ ) . 'includes/acf-pro-fields.php';
 include_once plugin_dir_path( __FILE__ ) . 'includes/acf-pro-location-rules.php';
 include_once plugin_dir_path( __FILE__ ) . 'includes/block.php';
 include_once plugin_dir_path( __FILE__ ) . 'includes/single-person-search.php';
-//include plugin_dir_path( __FILE__ ) . 'includes/taxonomy.php';
 
 
 //const directory_path = 'directory';
@@ -132,7 +129,7 @@ function uninstall() {
 }
 
 
-register_activation_hook( __FILE__, array( 'ucf_people_directory', 'activation' ) );
-register_deactivation_hook( __FILE__, array( 'ucf_people_directory', 'deactivation' ) );
-register_uninstall_hook( __FILE__, array( 'ucf_people_directory', 'deactivation' ) );
+register_activation_hook( __FILE__, __NAMESPACE__ . '\\activation' );
+register_deactivation_hook( __FILE__, __NAMESPACE__ . '\\deactivation' );
+register_uninstall_hook( __FILE__, __NAMESPACE__ . '\\deactivation' );
 
