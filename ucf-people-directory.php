@@ -4,7 +4,7 @@ Plugin Name: UCF People Directory
 Description: Provides a directory for the UCF people custom post type
 
 ### Note - update version number here and in includes/shortcode.php
-Version: 3.4.2
+Version: 3.5.0
 ###
 
 Author: Stephen Schrauger
@@ -28,6 +28,7 @@ include_once plugin_dir_path( __FILE__ ) . 'includes/acf-pro-fields.php';
 include_once plugin_dir_path( __FILE__ ) . 'includes/acf-pro-location-rules.php';
 include_once plugin_dir_path( __FILE__ ) . 'includes/block.php';
 include_once plugin_dir_path( __FILE__ ) . 'includes/single-person-search.php';
+include_once plugin_dir_path( __FILE__ ) . 'includes/people-cpt-settings.php';
 
 
 //const directory_path = 'directory';

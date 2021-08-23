@@ -7,7 +7,7 @@ include_once 'block-attributes.php';
 use WP_Query;
 use WP_Term_Query;
 
-const version               = "3.4.2"; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+const version               = "3.5.0"; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 const posts_per_page        = '10'; // number of profiles to list per page when paginating
 const taxonomy_categories   = ''; // slug for the 'categories' taxonomy
 
@@ -80,7 +80,7 @@ function replacement( $attrs = null ) {
 	$obj_block_attributes = new \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes();
 
 	if ( $obj_block_attributes->switch_to_main_site ) {
-		switch_to_blog( 1 );
+		ucf_switch_site(1);
 	}
 	// wrapper div. special class if not showing cards.
 	if ( $obj_block_attributes->show_contacts ) {
@@ -130,7 +130,7 @@ function replacement( $attrs = null ) {
 	$obj_block_attributes->replacement_data .= "</div>";
 
 	if ( $obj_block_attributes->switch_to_main_site ) {
-		restore_current_blog();
+		ucf_switch_site();
 	}
 
 	return $obj_block_attributes->replacement_data;
@@ -1040,6 +1040,24 @@ function term_list_entry_with_children( $top_level_term, $current_page_url, $cur
 
 // ############ Subcategories End
 
+/**
+ * Switches to a specific blog, or restores current blog, depending on input.
+ * Whether switching to or restoring back, it also re-registers the people post type, since
+ * other subsites might have different people definitions (such as the url slug), and we need
+ * to have the proper definition for permalinks calculations to be done correctly.
+ * @param int $id If set to a positive number, switches to that blog. If set to anything else (zero, null, false), it restores the current blog.
+ */
+function ucf_switch_site($id = 0){
+	if (is_int($id) && ($id >= 1)){
+		switch_to_blog($id);
+	} else {
+		restore_current_blog();
+	}
+
+	if ( class_exists( 'UCF_People_PostType' ) ) {
+		\UCF_People_PostType::register();
+	}
+}
 
 
 

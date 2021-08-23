@@ -495,7 +495,8 @@ function extend_person_fields() {
 								'field_type'        => 'select',
 								'allow_null'        => 0,
 								'add_term'          => 0,
-								'save_terms'        => 1,
+								'save_terms'        => 0,
+								// don't set this to true. otherwise, the person will have all categories removed except ones where they have manual sort orders applied. instead, leave it to the editor to add them to a people group even if it's defined here.
 								'load_terms'        => 0,
 								'return_format'     => 'id',
 								'multiple'          => 0,
@@ -798,6 +799,50 @@ function single_person_subsite_search_fields() {
 				'active'                => true,
 				'description'           => '',
 			) );
+		acf_add_local_field_group(
+			array(
+				'key'                   => 'group_6123e1b3a9bf7',
+				'title'                 => 'People Custom Post Type Options',
+				'fields'                => array(
+					array(
+						'key'               => 'field_6123e21fd1958',
+						'label'             => 'Person Rewrite Slug',
+						'name'              => 'person_rewrite_slug',
+						'type'              => 'text',
+						'instructions'      => 'Override the url path for the \'People\' custom post type. Default is "site.com/person". Setting a value here will change it to "site.com/yourvalue"',
+						'required'          => 0,
+						'conditional_logic' => 0,
+						'wrapper'           => array(
+							'width' => '',
+							'class' => '',
+							'id'    => '',
+						),
+						'default_value'     => '',
+						'placeholder'       => '',
+						'prepend'           => '',
+						'append'            => '',
+						'maxlength'         => '',
+					),
+				),
+				'location'              => array(
+					array(
+						array(
+							'param'    => 'options_page',
+							'operator' => '==',
+							'value'    => 'ucf-people-directory-general-settings',
+						),
+					),
+				),
+				'menu_order'            => 0,
+				'position'              => 'normal',
+				'style'                 => 'default',
+				'label_placement'       => 'top',
+				'instruction_placement' => 'label',
+				'hide_on_screen'        => '',
+				'active'                => true,
+				'description'           => '',
+			)
+		);
 	}
 }
 
