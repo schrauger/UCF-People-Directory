@@ -7,7 +7,7 @@ include_once 'block-attributes.php';
 use WP_Query;
 use WP_Term_Query;
 
-const version               = "3.5.0"; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+const version               = "3.5.1"; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 const posts_per_page        = '10'; // number of profiles to list per page when paginating
 const taxonomy_categories   = ''; // slug for the 'categories' taxonomy
 
@@ -624,7 +624,7 @@ function profile_full( $block_attributes ) {
 	// #### set variables used in html output
 	$person_title_prefix = get_field( 'person_title_prefix', $current_post_id );
 	$person_title_suffix = get_field( 'person_title_suffix', $current_post_id );
-	$full_name           = $person_title_prefix . ' ' . get_the_title() . ' ' . $person_title_suffix;
+	$full_name           = $person_title_prefix . get_the_title() . $person_title_suffix;
 	$profile_url         = get_permalink();
 	$image_url           = get_the_post_thumbnail_url( null, 'medium' );
 	if ( ! $image_url ) {
@@ -691,7 +691,7 @@ function profile_limited( $block_attributes ) {
 	// #### set variables used in html output
 	$person_title_prefix = get_field( 'person_title_prefix', $current_post_id );
 	$person_title_suffix = get_field( 'person_title_suffix', $current_post_id );
-	$full_name           = $person_title_prefix . ' ' . get_the_title() . ' ' . $person_title_suffix;
+	$full_name           = $person_title_prefix . get_the_title() . $person_title_suffix;
 
 	$weight = acf_weight_for_category( $block_attributes->weighted_category_id, get_the_ID() );
 

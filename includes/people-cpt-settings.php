@@ -17,9 +17,9 @@ add_filter( 'ucf_people_post_type_args', __NAMESPACE__ . '\\set_url_slug', 30, 1
 add_action( 'acf/save_post', __NAMESPACE__ . '\\purge_rewrite_rules_on_acf_save', 20, 1);
 
 function set_url_slug($args){
-
-	$rewrite = get_field('person_rewrite_slug', 'option');
-
+	if ( function_exists( 'get_field' ) ) {
+		$rewrite = get_field( 'person_rewrite_slug', 'option' );
+	}
 	if ($rewrite) {
 		$args[ 'rewrite' ] = [ 'slug' => $rewrite ];
 	}
