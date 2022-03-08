@@ -10,7 +10,14 @@ Individual contact listing within staff directory
 
 .navbar-toggleable-lg {
 	flex-wrap:  wrap !important;
+	float:  right; 
+	width:  30%;
+
+	.autonav {
+		padding-left:  0;
+	}
 }
+
 
 .current-section-notification {
 	margin: 0 0 15px 0;
@@ -48,8 +55,6 @@ Individual contact listing within staff directory
 }
 
 .profiles-list {
-
-	float: left;
 	width: 70%;
 
 	.person {
@@ -152,7 +157,7 @@ Individual contact listing within staff directory
 		width: 25%; */
 
 		.list {
-			margin: 25px 0 25px 0px;
+			margin-bottom:  1.5rem;
 
 			li {
 				border-bottom: solid 1px #f0f0f0;
