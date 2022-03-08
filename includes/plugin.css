@@ -4,6 +4,9 @@ Search bar for staff directory
 /**
 Individual contact listing within staff directory
 **/
+.navbar-toggleable-lg {
+  flex-wrap: wrap !important; }
+
 .current-section-notification {
   margin: 0 0 15px 0;
   color: #666; }
@@ -79,11 +82,15 @@ Individual contact listing within staff directory
         display: inline-block;
         padding: 0.3rem .2rem 0 0; }
 
+.navbar-side.bg-faded {
+  background: transparent; }
+
 .ucf-people-directory .publish {
   overflow: auto; }
+
 .ucf-people-directory .people_groups {
-  float: right;
-  width: 25%; }
+  /* float: right;
+		width: 25%; */ }
   .ucf-people-directory .people_groups .list {
     margin: 25px 0 25px 0px; }
     .ucf-people-directory .people_groups .list li {
@@ -115,6 +122,7 @@ Individual contact listing within staff directory
       .ucf-people-directory .people_groups .list li a[aria-expanded="true"] .fa-angle-down {
         transform: scaleY(-1);
         transform-origin: center center; }
+
 .ucf-people-directory.no-card-view .people_groups {
   float: none;
   margin-top: 25px;
@@ -132,10 +140,20 @@ Individual contact listing within staff directory
     background: #fcfcfc;
     margin: 5px; }
 
+@media screen and (max-width: 1199px) {
+  .site-main .navbar-side {
+    flex-wrap: nowrap;
+    width: 100%;
+    float: none;
+    margin: 0 0 1.5rem 0;
+    background: #ececec; }
+    .site-main .navbar-side .navbar-brand {
+      display: none !important; }
+  .site-main .profiles-list {
+    width: 100%; } }
+
 @media (max-width: 999px) {
   .profiles-list .person {
     flex-wrap: wrap; }
     .profiles-list .person div.photo {
       width: 100%; } }
-
-/*# sourceMappingURL=plugin.css.map */

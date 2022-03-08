@@ -8,6 +8,10 @@ Search bar for staff directory
 Individual contact listing within staff directory
 **/
 
+.navbar-toggleable-lg {
+	flex-wrap:  wrap !important;
+}
+
 .current-section-notification {
 	margin: 0 0 15px 0;
 	color: #666;
@@ -133,6 +137,10 @@ Individual contact listing within staff directory
 
 }
 
+.navbar-side.bg-faded {
+	background:  transparent;
+}
+
 .ucf-people-directory {
 
 	.publish {
@@ -140,8 +148,8 @@ Individual contact listing within staff directory
 	}
 
 	.people_groups {
-		float: right;
-		width: 25%;
+		/* float: right;
+		width: 25%; */
 
 		.list {
 			margin: 25px 0 25px 0px;
@@ -227,6 +235,29 @@ Individual contact listing within staff directory
 		background: #fcfcfc;
 		margin: 5px;
 	}
+}
+
+@media screen and (max-width: 1199px) {
+
+	.site-main {
+
+		.navbar-side {	
+			flex-wrap: nowrap;
+			width:  100%;	
+			float:  none;
+			margin: 0 0 1.5rem 0;
+			background:  #ececec;
+
+			.navbar-brand {
+				display:  none !important;
+			}
+		}
+
+		.profiles-list {
+			width:  100%;
+		}
+	}
+
 }
 
 @media (max-width: 999px) {

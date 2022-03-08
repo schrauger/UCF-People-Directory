@@ -808,8 +808,21 @@ function people_groups_html( $block_attributes ) {
 	//remove_filter( 'get_terms_defaults', __NAMESPACE__ . '\\unhide_categories_terms', 20);
 
 	$html_people_groups .= "
+	<nav class='navbar navbar-side navbar-toggleable-lg navbar-light bg-faded'>
+          <h3 class='navbar-brand'>Filter By</h3>
+
+
+  <button class='navbar-toggler collapsed' type='button' data-toggle='collapse' data-target='#navbarNav' aria-controls='navbarNav' aria-expanded='false' aria-label='Toggle navigation'>
+    <span class='navbar-toggler-text' id='filter_top'>Filter By</span>
+    <span class='navbar-toggler-icon'></span>
+  </button>
+  <div class='collapse navbar-collapse' id='navbarNav'>
+
+    <ul class='autonav'>
+
+
+
             <div class='people_groups'>
-                <h3 class='title yellow_underline' id='filter_top'>Filter by</h3>
                 <div class='list'>
                     <ul id='{$block_attributes->directory_id}' class='menu'>
                         {$people_group_list_html}
@@ -819,6 +832,14 @@ function people_groups_html( $block_attributes ) {
                 <a href='#filter_top' class='badge badge-secondary'><i class='fa fa-chevron-circle-up icongrey'></i> Top of Listing</a>
 
             </div>
+
+
+
+     </ul>
+
+  </div>
+
+</nav>
         ";
 
 	return $html_people_groups;
