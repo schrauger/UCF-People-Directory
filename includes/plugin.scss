@@ -8,6 +8,24 @@ Search bar for staff directory
 Individual contact listing within staff directory
 **/
 
+.no-card-view {
+	.navbar-toggleable-lg {
+		float:  none;
+		width:  100%;
+
+		.autonav {
+			width:  100%;
+		}
+	}
+
+	.navbar {
+
+		.navbar-brand {
+			display:  none;
+		}
+	}
+}
+
 .navbar-toggleable-lg {
 	flex-wrap:  wrap !important;
 	float:  right; 
@@ -244,6 +262,10 @@ Individual contact listing within staff directory
 }
 
 @media screen and (max-width: 1199px) {
+
+	.no-card-view .navbar-toggleable-lg .autonav {
+		padding-left:  1rem;
+	}
 
 	.site-main {
 

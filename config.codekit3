@@ -57,6 +57,14 @@
       "oAP" : "\/includes\/block-attributes.php",
       "oF" : 0
     },
+    "\/includes\/block.php" : {
+      "cB" : 0,
+      "ft" : 8192,
+      "hM" : 0,
+      "oA" : 0,
+      "oAP" : "\/includes\/block.php",
+      "oF" : 0
+    },
     "\/includes\/default.png" : {
       "ft" : 32768,
       "iS" : 5991,

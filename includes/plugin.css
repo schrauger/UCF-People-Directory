@@ -4,6 +4,15 @@ Search bar for staff directory
 /**
 Individual contact listing within staff directory
 **/
+.no-card-view .navbar-toggleable-lg {
+  float: none;
+  width: 100%; }
+  .no-card-view .navbar-toggleable-lg .autonav {
+    width: 100%; }
+
+.no-card-view .navbar .navbar-brand {
+  display: none; }
+
 .navbar-toggleable-lg {
   flex-wrap: wrap !important;
   float: right;
@@ -145,6 +154,8 @@ Individual contact listing within staff directory
     margin: 5px; }
 
 @media screen and (max-width: 1199px) {
+  .no-card-view .navbar-toggleable-lg .autonav {
+    padding-left: 1rem; }
   .site-main .navbar-side {
     flex-wrap: nowrap;
     width: 100%;
