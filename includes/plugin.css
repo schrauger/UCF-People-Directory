@@ -13,12 +13,12 @@ Individual contact listing within staff directory
 .no-card-view .navbar .navbar-brand {
   display: none; }
 
-.navbar-toggleable-lg {
+.navbar-directory {
   flex-wrap: wrap !important;
   float: right;
   width: 27%;
   margin-left: 1.5rem; }
-  .navbar-toggleable-lg .autonav {
+  .navbar-directory .autonav {
     padding-left: 0; }
 
 .current-section-notification {

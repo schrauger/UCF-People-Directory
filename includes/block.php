@@ -810,7 +810,7 @@ function people_groups_html( $block_attributes ) {
 	//remove_filter( 'get_terms_defaults', __NAMESPACE__ . '\\unhide_categories_terms', 20);
 
 	$html_people_groups .= "
-	<nav class='navbar navbar-side navbar-toggleable-lg navbar-light bg-faded'>
+	<nav class='navbar navbar-side navbar-directory navbar-toggleable-lg navbar-light bg-faded'>
           <h3 class='navbar-brand' id='filter_top' >Filter By</h3>
 
 
