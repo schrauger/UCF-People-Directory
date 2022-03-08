@@ -811,11 +811,11 @@ function people_groups_html( $block_attributes ) {
 
 	$html_people_groups .= "
 	<nav class='navbar navbar-side navbar-toggleable-lg navbar-light bg-faded'>
-          <h3 class='navbar-brand'>Filter By</h3>
+          <h3 class='navbar-brand' id='filter_top' >Filter By</h3>
 
 
   <button class='navbar-toggler collapsed' type='button' data-toggle='collapse' data-target='#navbarNav' aria-controls='navbarNav' aria-expanded='false' aria-label='Toggle navigation'>
-    <span class='navbar-toggler-text' id='filter_top'>Filter By</span>
+    <span class='navbar-toggler-text' >Filter By</span>
     <span class='navbar-toggler-icon'></span>
   </button>
   <div class='collapse navbar-collapse' id='navbarNav'>
