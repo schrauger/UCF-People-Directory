@@ -94,6 +94,11 @@ function replacement( $attrs = null ) {
 		$obj_block_attributes->replacement_data .= search_bar_html( $obj_block_attributes );
 	}
 
+	// print out subcategories unless block defines a specific category
+	if ( $obj_block_attributes->show_group_filter_sidebar ) {
+		$obj_block_attributes->replacement_data .= people_groups_html( $obj_block_attributes );
+	}
+
 	$wp_query           = null;
 	$wp_query_max_pages = null;
 	if ( $obj_block_attributes->show_contacts ) { // user has searched or selected a group, or the editor is showing contacts on initial/unfiltered view. show the contacts.
@@ -117,10 +122,7 @@ function replacement( $attrs = null ) {
 
 		wp_reset_postdata();
 	}
-	// print out subcategories unless block defines a specific category
-	if ( $obj_block_attributes->show_group_filter_sidebar ) {
-		$obj_block_attributes->replacement_data .= people_groups_html( $obj_block_attributes );
-	}
+
 
 	// print out pagination, if we're showing contacts
 	if ( $obj_block_attributes->show_contacts ) {
