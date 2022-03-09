@@ -4,7 +4,7 @@ Plugin Name: UCF People Directory
 Description: Provides a directory for the UCF people custom post type
 
 ### Note - update version number here and in includes/block.php
-Version: 3.6.1
+Version: 3.6.2
 ###
 
 Author: Stephen Schrauger
@@ -36,8 +36,8 @@ const taxonomy_name = 'people_group'; // defined by ucf people plugin
 
 
 // plugin css/js
-add_action( 'enqueue_block_assets', __NAMESPACE__ . '\\add_css' );
-add_action( 'enqueue_block_assets', __NAMESPACE__ . '\\add_js' );
+//add_action( 'enqueue_block_assets', __NAMESPACE__ . '\\add_css' );
+//add_action( 'enqueue_block_assets', __NAMESPACE__ . '\\add_js' );
 // plugin activation hooks
 register_activation_hook( __FILE__, __NAMESPACE__ . '\\activation' );
 register_deactivation_hook( __FILE__, __NAMESPACE__ . '\\deactivation' );
@@ -45,6 +45,14 @@ register_uninstall_hook( __FILE__, __NAMESPACE__ . '\\deactivation' );
 
 add_filter( 'admin_init', __NAMESPACE__ . '\\add_admin_hook' );
 
+
+/**
+ * Used by acf enqueue assets, to load the js and css conditionally (only when block is on page)
+ */
+function enqueue_js_css() {
+	add_css();
+	add_js();
+}
 
 function add_css() {
 	if ( file_exists( plugin_dir_path( __FILE__ ) . '/includes/plugin.css' ) ) {
@@ -133,4 +141,5 @@ function uninstall() {
 register_activation_hook( __FILE__, __NAMESPACE__ . '\\activation' );
 register_deactivation_hook( __FILE__, __NAMESPACE__ . '\\deactivation' );
 register_uninstall_hook( __FILE__, __NAMESPACE__ . '\\deactivation' );
+
 

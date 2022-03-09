@@ -40,6 +40,7 @@ function create_fields() {
 				'title'           => __( 'UCF People Directory' ),
 				'description'     => __( 'People directory.' ),
 				'render_callback' => 'ucf_people_directory\\block\\replacement_print',
+				'enqueue_assets'  => 'ucf_people_directory\\enqueue_js_css',
 				'category'        => 'embed',
 				'icon'            => 'id',
 				'keywords'        => array(
