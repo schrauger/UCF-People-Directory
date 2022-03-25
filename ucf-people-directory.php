@@ -4,7 +4,7 @@ Plugin Name: UCF People Directory
 Description: Provides a directory for the UCF people custom post type
 
 ### Note - update version number here and in includes/block.php
-Version: 3.6.2
+Version: 3.7.0
 ###
 
 Author: Stephen Schrauger
@@ -75,6 +75,26 @@ function add_js() {
 			filemtime( plugin_dir_path( __FILE__ ) . '/includes/plugin.js' ),
 			false
 		);
+	}
+	if (is_admin()) {
+		if ( file_exists( plugin_dir_path( __FILE__ ) . 'includes/arrive.min.js' ) ) {
+			wp_enqueue_script(
+				'arrive',
+				plugin_dir_url( __FILE__ ) . 'includes/arrive.min.js',
+				array( 'jquery' ),
+				filemtime( plugin_dir_path( __FILE__ ) . '/includes/arrive.min.js' ),
+				false
+			);
+		}
+		if ( file_exists( plugin_dir_path( __FILE__ ) . '/includes/plugin-editor-hide-taxonomy-if-unused.js' ) ) {
+			wp_enqueue_script(
+				'ucf-college-accordion-script-editor-hide-taxonomy-if-unused',
+				plugin_dir_url( __FILE__ ) . 'includes/plugin-editor-hide-taxonomy-if-unused.js',
+				array( 'jquery', 'arrive' ),
+				filemtime( plugin_dir_path( __FILE__ ) . '/includes/plugin-editor-hide-taxonomy-if-unused.js' ),
+				true
+			);
+		}
 	}
 }
 
