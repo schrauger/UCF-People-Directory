@@ -7,7 +7,7 @@ include_once 'block-attributes.php';
 use WP_Query;
 use WP_Term_Query;
 
-const version               = "3.8.0"; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+const version               = "3.8.1"; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 const posts_per_page        = '10'; // number of profiles to list per page when paginating
 const taxonomy_categories   = ''; // slug for the 'categories' taxonomy
 
@@ -148,7 +148,7 @@ function replacement( $attrs = null ) {
     $obj_block_attributes->replacement_data = "
 	    <div class='${directory_div_classes}'>
 	        ${search_bar_html}
-	        ${$people_groups_html}
+	        ${people_groups_html}
 	        ${profiles_html}
 	        ${pagination_html}
 	    </div>
