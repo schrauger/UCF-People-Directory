@@ -7,7 +7,7 @@ include_once 'block-attributes.php';
 use WP_Query;
 use WP_Term_Query;
 
-const version               = "3.7.0"; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+const version               = "3.8.0"; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 const posts_per_page        = '10'; // number of profiles to list per page when paginating
 const taxonomy_categories   = ''; // slug for the 'categories' taxonomy
 
@@ -82,37 +82,47 @@ function replacement( $attrs = null ) {
 	if ( $obj_block_attributes->switch_to_main_site ) {
 		ucf_switch_site(1);
 	}
-	// wrapper div. special class if not showing cards.
-	if ( $obj_block_attributes->show_contacts ) {
-		$obj_block_attributes->replacement_data .= "<div class='ucf-people-directory'>";
-	} else {
-		$obj_block_attributes->replacement_data .= "<div class='ucf-people-directory no-card-view'>";
+
+	$directory_div_classes_array = [
+	    'ucf-people-directory'
+	];
+
+	if ( ! $obj_block_attributes->show_contacts ) {
+        $directory_div_classes_array[] = 'no-card-view';
 	}
 
 	// print out search bar
+	$search_bar_html = "";
 	if ( $obj_block_attributes->show_search_bar ) {
-		$obj_block_attributes->replacement_data .= search_bar_html( $obj_block_attributes );
-	}
+		$search_bar_html = search_bar_html( $obj_block_attributes );
+	} else {
+        $directory_div_classes_array[] = 'no-search-bar';
+    }
 
 	// print out subcategories unless block defines a specific category
+    $people_groups_html = "";
 	if ( $obj_block_attributes->show_group_filter_sidebar ) {
-		$obj_block_attributes->replacement_data .= people_groups_html( $obj_block_attributes );
-	}
+        $people_groups_html = people_groups_html( $obj_block_attributes );
+	} else {
+        $directory_div_classes_array[] = 'no-filter-sidebar';
+    }
 
+
+    $profiles_html = "";
 	$wp_query           = null;
 	$wp_query_max_pages = null;
 	if ( $obj_block_attributes->show_contacts ) { // user has searched or selected a group, or the editor is showing contacts on initial/unfiltered view. show the contacts.
 		$transient_data_compressed = get_transient( $obj_block_attributes->transient_name_cards );
 		if ( $transient_data_compressed ) {
-			$transient_data                             = gzuncompress( $transient_data_compressed );
-			$obj_block_attributes->replacement_data .= $transient_data;
-			$wp_query_max_pages                         = get_transient( $obj_block_attributes->transient_name_wp_query_max_pages );
+			$transient_data        = gzuncompress( $transient_data_compressed );
+            $profiles_html         = $transient_data;
+			$wp_query_max_pages    = get_transient( $obj_block_attributes->transient_name_wp_query_max_pages );
 		} else {
 			$wp_query = query_profiles( $obj_block_attributes );
 			// print out profiles
-			$fresh_data                                 = profiles_html( $wp_query, $obj_block_attributes );
-			$obj_block_attributes->replacement_data .= $fresh_data;
-			$wp_query_max_pages                         = $wp_query->max_num_pages;
+			$fresh_data            = profiles_html( $wp_query, $obj_block_attributes );
+            $profiles_html         = $fresh_data;
+			$wp_query_max_pages    = $wp_query->max_num_pages;
 
 			$seconds_per_week = 60 * 60 * 24 * 7;
 			set_transient( $obj_block_attributes->transient_name_cards, gzcompress( $fresh_data ), $seconds_per_week * 5 ); // 5 WEEK expiration. will also expire when any person is added/updated
@@ -123,17 +133,26 @@ function replacement( $attrs = null ) {
 		wp_reset_postdata();
 	}
 
-
 	// print out pagination, if we're showing contacts
+    $pagination_html = "";
 	if ( $obj_block_attributes->show_contacts ) {
-		$obj_block_attributes->replacement_data .= pagination_html( $wp_query_max_pages, $obj_block_attributes );
+        $pagination_html = pagination_html( $wp_query_max_pages, $obj_block_attributes );
 	}
-
-	$obj_block_attributes->replacement_data .= "</div>";
 
 	if ( $obj_block_attributes->switch_to_main_site ) {
 		ucf_switch_site();
 	}
+
+    // Put it all together
+    $directory_div_classes = implode(" ", $directory_div_classes_array);
+    $obj_block_attributes->replacement_data = "
+	    <div class='${directory_div_classes}'>
+	        ${search_bar_html}
+	        ${$people_groups_html}
+	        ${profiles_html}
+	        ${pagination_html}
+	    </div>
+	";
 
 	return $obj_block_attributes->replacement_data;
 }
