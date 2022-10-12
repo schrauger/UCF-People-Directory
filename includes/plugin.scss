@@ -167,6 +167,12 @@ Individual contact listing within staff directory
 
 .ucf-people-directory {
 
+	&.no-filter-sidebar {
+		.profiles-list {
+			width:  100%;
+		}
+	}
+
 	.publish {
 		overflow: auto;
 	}
