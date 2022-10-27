@@ -22,7 +22,8 @@ const acf_option_search_enabled           = 'ucf_people_directory_options_enable
 const acf_option_multisite_subsite_toggle = 'ucf_people_directory_options_main_sub_switch';
 const acf_option_url                      = 'ucf_people_directory_options_target_page';
 
-const wp_action_to_target = 'single_person_before_article'; // the action that a theme has in their template file that this plugin hooks into
+//const wp_action_to_target = 'single_person_before_article'; // the action that a theme has in their template file that this plugin hooks into
+const wp_action_to_target = 'header_default_markup_container_end'; // the action that a theme has in their template file that this plugin hooks into
 
 /*
  * Adds the webpage ui to set the settings for the single person search field
