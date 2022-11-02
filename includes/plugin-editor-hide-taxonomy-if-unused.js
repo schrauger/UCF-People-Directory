@@ -10,17 +10,19 @@ jQuery(document).ready(function() {
         let taxonomy_choice = jQuery(this);
 
         let taxonomy_div = taxonomy_choice.parents('.components-panel__body');
-        let count_checkboxes = taxonomy_div.find('input').length;
-        let count_checked = taxonomy_div.find('input:checked').length; // look for any terms already in use for this page
+        let taxonomy_name = taxonomy_div.find('h2.components-panel__body-title').text();
+        if (taxonomy_name == "UCF College Shortcodes") {
+            let count_checkboxes = taxonomy_div.find('input').length;
+            let count_checked = taxonomy_div.find('input:checked').length; // look for any terms already in use for this page
 
-        if (count_checked === 0 && count_checkboxes > 0) {
-            // page is not already using any of the shortcode taxonomy terms. hide it altogether
-            taxonomy_div.hide();
-        } else {
-            // page is using some of the shortcode terms. hide the unused ones so they don't add more deprecated items.
-            taxonomy_div.find('input:not(:checked)').parents('.editor-post-taxonomies__hierarchical-terms-choice').hide();
+            if (count_checked === 0 && count_checkboxes > 0) {
+                // page is not already using any of the shortcode taxonomy terms. hide it altogether
+                taxonomy_div.hide();
+            } else {
+                // page is using some of the shortcode terms. hide the unused ones so they don't add more deprecated items.
+                taxonomy_div.find('input:not(:checked)').parents('.editor-post-taxonomies__hierarchical-terms-choice').hide();
+            }
         }
-
     });
 });
 
