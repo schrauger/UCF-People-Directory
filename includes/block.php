@@ -7,7 +7,6 @@ include_once 'block-attributes.php';
 use WP_Query;
 use WP_Term_Query;
 
-const version               = "3.8.3"; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 const posts_per_page        = '10'; // number of profiles to list per page when paginating
 const taxonomy_categories   = ''; // slug for the 'categories' taxonomy
 
@@ -658,7 +657,9 @@ function profile_full( $block_attributes ) {
 	$location_url = get_field( 'person_room_url', $current_post_id );// link to a map
 	$email        = get_field( 'person_email', $current_post_id );
 	$phone_array  = get_field( 'person_phone_numbers', $current_post_id );
-	$phone        = $phone_array[ 0 ][ 'number' ];
+
+    // if phone_array exists, and is an array, then if array[0] exists, get the [number] subarray item or return '' if that doesn't exist
+    $phone        = ($phone_array && is_array($phone_array) ? ($phone_array[ 0 ] ? ($phone_array[ 0 ][ 'number' ] ?? '') : '' ) : '');
 
 	$div_location = contact_info( $location, 'location', $location_url );
 	$div_email    = contact_info( $email, 'email', "mailto:{$email}" );

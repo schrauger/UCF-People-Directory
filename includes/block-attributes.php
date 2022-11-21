@@ -15,7 +15,6 @@ use const ucf_people_directory\block\GET_param_keyword;
 use const ucf_people_directory\block\posts_per_page;
 use const ucf_people_directory\block\taxonomy_name;
 use const ucf_people_directory\block\transient_cache_buster_name;
-use const ucf_people_directory\block\version;
 
 class ucf_people_directory_block_attributes {
 
@@ -277,7 +276,9 @@ class ucf_people_directory_block_attributes {
 	 * @return bool|string|void
 	 */
 	protected function set_transient_name() {
-		if ( ! $this->show_contacts ) {
+        $plugin_version = get_plugin_data(plugin_dir_path(__FILE__) . '../ucf-people-directory.php')['Version']; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+
+        if ( ! $this->show_contacts ) {
 			$this->transient_name_cards = '';
 
 			return; // transient is only for contacts. if this current view doesn't show contacts, there's no transient.
@@ -310,7 +311,7 @@ class ucf_people_directory_block_attributes {
 		} else {
 			$category = implode( "+", $this->editor_people_groups );
 		}
-		$transient_name = md5( $category . $this->search_content . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value . version );
+		$transient_name = md5( $category . $this->search_content . $this->paged . $this->posts_per_page . $meta_transient_cache_buster_value . $plugin_version );
 
 		$this->transient_name_cards              = substr( $transient_name_prefix . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
 		$this->transient_name_wp_query_max_pages = substr( $transient_name_prefix . 'pages-' . $transient_name, 0, 40 ); // transient names are limited to 45 characters, if they have an expiration. use the first 40 characters of our ucf-pd-MD5HASH1234123412341234
