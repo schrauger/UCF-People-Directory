@@ -972,6 +972,7 @@ function people_group_list_html( $block_attributes ) {
  */
 function term_list_entry( $title, $current_page_url, $slug, $class = 'parent' ) {
 	$term_url = "";
+    $title_text = "";
 	if ( $slug ) {
 		$term = get_term_by( 'slug', $slug, taxonomy_name );
 
