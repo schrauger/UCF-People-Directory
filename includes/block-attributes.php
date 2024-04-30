@@ -276,7 +276,7 @@ class ucf_people_directory_block_attributes {
 	 * @return bool|string|void
 	 */
 	protected function set_transient_name() {
-        $plugin_version = get_plugin_data(plugin_dir_path(__FILE__) . '../ucf-people-directory.php')['Version']; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
+        $plugin_version = \get_plugin_data(plugin_dir_path(__FILE__) . '../ucf-people-directory.php')['Version']; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 
         if ( ! $this->show_contacts ) {
 			$this->transient_name_cards = '';
@@ -287,7 +287,7 @@ class ucf_people_directory_block_attributes {
 		// first, get the current cache-busting transient value. this value changes whenever a person is added or updated,
 		// so that the directory is always up to date with the latest information, but is only recomputed when people change.
 
-		$meta_transient_cache_buster_value = get_transient( transient_cache_buster_name );
+		$meta_transient_cache_buster_value = \get_transient( transient_cache_buster_name );
 
 		// transient name is comprised of:
 		/*
