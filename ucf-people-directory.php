@@ -2,7 +2,7 @@
 /*
 Plugin Name: UCF People Directory
 Description: Provides a directory for the UCF people custom post type
-Version: 3.8.7
+Version: 3.8.8
 
 Author: Stephen Schrauger
 Plugin URI: https://github.com/schrauger/UCF-People-Directory
@@ -158,5 +158,3 @@ function uninstall() {
 register_activation_hook( __FILE__, __NAMESPACE__ . '\\activation' );
 register_deactivation_hook( __FILE__, __NAMESPACE__ . '\\deactivation' );
 register_uninstall_hook( __FILE__, __NAMESPACE__ . '\\deactivation' );
-
-

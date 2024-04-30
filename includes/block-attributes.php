@@ -276,6 +276,10 @@ class ucf_people_directory_block_attributes {
 	 * @return bool|string|void
 	 */
 	protected function set_transient_name() {
+        // get_plugin_data only exists for admins. we want to access the function in order to extract the version number for cache busting.
+        if( !function_exists('get_plugin_data') ){
+            require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+        }
         $plugin_version = \get_plugin_data(plugin_dir_path(__FILE__) . '../ucf-people-directory.php')['Version']; // current block version - manually update along with version in main php file whenever pushing a new version. used for cache busting, to prevent version incompatibilities.
 
         if ( ! $this->show_contacts ) {
