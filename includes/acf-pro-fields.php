@@ -12,7 +12,9 @@ namespace ucf_people_directory\acf_pro_fields;
 include_once 'block-attributes.php';
 
 const shortcode = 'ucf_people_directory';
-
+const acf_key_filtered =        'field_5e722eaa23422';
+const acf_key_show_search_bar = 'field_5e727e5c02cb6';
+const acf_key_switch_to_main_site = 'field_5e72817c085cd';
 add_action( 'acf/init', __NAMESPACE__ . '\\create_fields' );
 
 // sort order override for people posttypes, used in directory sorting.
@@ -62,7 +64,7 @@ function create_fields() {
 				'title'                 => 'People Directory Options',
 				'fields'                => array(
 					array(
-						'key'               => 'field_5e727e5c02cb6',
+						'key'               => acf_key_show_search_bar,
 						'label'             => 'Search bar',
 						'name'              => 'show_search_bar',
 						'type'              => 'true_false',
@@ -90,7 +92,7 @@ function create_fields() {
 						'conditional_logic' => array(
 							array(
 								array(
-									'field'    => 'field_5e727e5c02cb6',
+									'field'    => acf_key_show_search_bar,
 									'operator' => '==',
 									'value'    => '1',
 								),
@@ -117,7 +119,7 @@ function create_fields() {
 						'conditional_logic' => array(
 							array(
 								array(
-									'field'    => 'field_5e727e5c02cb6',
+									'field'    => acf_key_show_search_bar,
 									'operator' => '==',
 									'value'    => '1',
 								),
@@ -145,7 +147,7 @@ function create_fields() {
 								'conditional_logic' => array(
 									array(
 										array(
-											'field'    => 'field_5e727e5c02cb6',
+											'field'    => acf_key_show_search_bar,
 											'operator' => '==',
 											'value'    => '1',
 										),
@@ -173,7 +175,7 @@ function create_fields() {
 						),
 					),
 					( ( get_current_blog_id() !== 1 ) ? array(
-						'key'               => 'field_5e72817c085cd',
+						'key'               => acf_key_switch_to_main_site,
 						'label'             => 'Profile source',
 						'name'              => 'switch_to_main_site',
 						'type'              => 'true_false',
@@ -191,26 +193,31 @@ function create_fields() {
 						'ui_on_text'        => 'COM',
 						'ui_off_text'       => 'Subsite',
 					) : null ),
-					array(
-						'key'               => 'field_5e722eaa23422',
-						'label'             => 'Filtered directory',
-						'name'              => 'filtered',
-						'type'              => 'true_false',
-						'instructions'      => '',
-						'required'          => 0,
-						'conditional_logic' => 0,
-						'wrapper'           => array(
-							'width' => '',
-							'class' => '',
-							'id'    => '',
-						),
-						'message'           => 'Show specific categories',
-						'default_value'     => 0,
-						'ui'                => 1,
-						'ui_on_text'        => 'Filtered',
-						'ui_off_text'       => 'Everyone',
-					),
-					array(
+                    array(
+                        'key' => acf_key_filtered,
+                        'label' => 'Filtered directory',
+                        'name' => 'filtered',
+                        'aria-label' => '',
+                        'type' => 'button_group',
+                        'instructions' => 'Show specific categories',
+                        'required' => 0,
+                        'conditional_logic' => 0,
+                        'wrapper' => array(
+                            'width' => '',
+                            'class' => '',
+                            'id' => '',
+                        ),
+                        'choices' => array(
+                            0 => 'Everyone',
+                            1 => 'Whitelist',
+                            2 => 'Blacklist',
+                        ),
+                        'default_value' => 0,
+                        'return_format' => 'value',
+                        'allow_null' => 0,
+                        'layout' => 'horizontal',
+                    ),
+                    array(
 						'key'               => 'field_5c8136ee0c0f6',
 						'label'             => 'People Directory Groups',
 						'name'              => 'specific_terms',
@@ -220,16 +227,28 @@ function create_fields() {
 						'conditional_logic' => array(
 							array(
 								array(
-									'field'    => 'field_5e722eaa23422',
+									'field'    => acf_key_filtered,
 									'operator' => '==',
-									'value'    => '1',
+									'value'    => \ucf_people_directory\block\FILTERED_WHITELIST,
 								),
 								array(
-									'field'    => 'field_5e72817c085cd',
+									'field'    => acf_key_switch_to_main_site,
 									'operator' => '!=',
 									'value'    => '1',
 								),
 							),
+                            array(
+                                array(
+                                    'field'    => acf_key_filtered,
+                                    'operator' => '==',
+                                    'value'    => \ucf_people_directory\block\FILTERED_BLACKLIST,
+                                ),
+                                array(
+                                    'field'    => acf_key_switch_to_main_site,
+                                    'operator' => '!=',
+                                    'value'    => '1',
+                                ),
+                            ),
 						),
 						'wrapper'           => array(
 							'width' => '',
@@ -276,16 +295,28 @@ function create_fields() {
 						'conditional_logic' => array(
 							array(
 								array(
-									'field'    => 'field_5e722eaa23422',
+									'field'    => acf_key_filtered,
 									'operator' => '==',
-									'value'    => '1',
+									'value'    => \ucf_people_directory\block\FILTERED_WHITELIST,
 								),
 								array(
-									'field'    => 'field_5e72817c085cd',
+									'field'    => acf_key_switch_to_main_site,
 									'operator' => '==',
 									'value'    => '1',
 								),
 							),
+                            array(
+                                array(
+                                    'field'    => acf_key_filtered,
+                                    'operator' => '==',
+                                    'value'    => \ucf_people_directory\block\FILTERED_BLACKLIST,
+                                ),
+                                array(
+                                    'field'    => acf_key_switch_to_main_site,
+                                    'operator' => '==',
+                                    'value'    => '1',
+                                ),
+                            ),
 						),
 						'wrapper'           => array(
 							'width' => '',
@@ -998,6 +1029,3 @@ function people_group_switch_to_blog( $terms, $taxonomies, $args ) {
 
 	return $terms;
 }
-
-
-

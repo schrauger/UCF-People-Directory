@@ -6,11 +6,16 @@ include_once 'block-attributes.php';
 
 use WP_Query;
 use WP_Term_Query;
+use ucf_people_directory\block_attributes\ucf_people_directory_block_attributes;
 
 const posts_per_page        = '10'; // number of profiles to list per page when paginating
 const taxonomy_categories   = ''; // slug for the 'categories' taxonomy
 
 const taxonomy_name                  = 'people_group';
+const acf_filtered_choice            = 'filtered';
+const FILTERED_NONE                  = 0;
+const FILTERED_WHITELIST             = 1;
+const FILTERED_BLACKLIST             = 2;
 const acf_filter_term_name           = 'specific_terms';
 const acf_filter_term_name_main_site = 'specific_terms_main_site';
 const GET_param_group                = 'group_search'; // group or category person is in
@@ -165,11 +170,11 @@ function replacement_print() {
 /**
  * Return a string of HTML for the search input form
  *
- * @param $block_attributes \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes
+ * @param $block_attributes ucf_people_directory_block_attributes
  *
  * @return string
  */
-function search_bar_html( $block_attributes ) {
+function search_bar_html(ucf_people_directory_block_attributes $block_attributes ) {
 	$html_search_bar         = '';
 	$keyword_search          = GET_param_keyword;
 	$search_type             = GET_param_search_type;
@@ -224,11 +229,11 @@ function search_bar_html( $block_attributes ) {
  * Return a string of HTML with all matching profiles. If a single category is specified, weighted profiles appear
  * first.
  *
- * @param $block_attributes ucf_people_directory_block_attributes
+ * @param $block_attributes  ucf_people_directory_block_attributes
  *
  * @return WP_Query
  */
-function query_profiles( $block_attributes ) {
+function query_profiles(ucf_people_directory_block_attributes $block_attributes ) {
 
 	// ## Query 1 - Run if viewing a single category
 	if ( $block_attributes->weighted_category_id ) {
@@ -300,15 +305,27 @@ function query_profiles( $block_attributes ) {
 	// if any group specified, filter to those groups. otherwise, show all.
 	$people_groups = ( $block_attributes->people_group_slug ? $block_attributes->people_group_slug : $block_attributes->editor_people_groups );
 	if ( $people_groups ) {
-		$query_args[ 'tax_query' ] = array(
-			array(
-				'taxonomy'         => taxonomy_name,
-				'field'            => 'slug',
-				'terms'            => $people_groups,
-				'include_children' => true,
-				'operator'         => 'IN'
-			)
-		);
+        if ($block_attributes->filtered == FILTERED_WHITELIST) {
+            $query_args['tax_query'] = array(
+                array(
+                    'taxonomy' => taxonomy_name,
+                    'field' => 'slug',
+                    'terms' => $people_groups,
+                    'include_children' => true,
+                    'operator' => 'IN'
+                )
+            );
+        } elseif ($block_attributes->filtered == FILTERED_BLACKLIST) {
+            $query_args['tax_query'] = array(
+                array(
+                    'taxonomy' => taxonomy_name,
+                    'field' => 'slug',
+                    'terms' => $people_groups,
+                    'include_children' => true,
+                    'operator' => 'NOT IN'
+                )
+            );
+        }
 	}
 
 	// ## Query 3 - Always run. Optionally add results from previous two queries if they both ran.
@@ -888,7 +905,11 @@ function people_group_list_html( $block_attributes ) {
 		// we have to include empty groups due to the possibility of an external link category which will have a 0 count usage. we have to filter out other empty ones later.
 	);
 	if ( sizeof( $block_attributes->editor_people_groups ) > 0 ) {
-		$get_terms_arguments[ 'include' ] = $block_attributes->editor_people_groups_ids; // only include terms specified by the editor
+        if ( $block_attributes->filtered == FILTERED_WHITELIST ) {
+		    $get_terms_arguments[ 'include' ] = $block_attributes->editor_people_groups_ids; // only include terms specified by the editor
+        } elseif ( $block_attributes->filtered == FILTERED_BLACKLIST ) {
+            $get_terms_arguments[ 'exclude' ] = $block_attributes->editor_people_groups_ids; // only include terms specified by the editor
+        }
 	} else {
 		// editor wants a global directory (no categories specified)
 		$get_terms_arguments[ 'parent' ] = 0; // only show top level groups - we'll get the children later for formatting

@@ -8,6 +8,7 @@
 
 namespace ucf_people_directory\block_attributes;
 
+use const ucf_people_directory\block\acf_filtered_choice;
 use const ucf_people_directory\block\acf_filter_term_name;
 use const ucf_people_directory\block\acf_filter_term_name_main_site;
 use const ucf_people_directory\block\GET_param_group;
@@ -41,6 +42,9 @@ class ucf_people_directory_block_attributes {
 
 	/** @var string the actual html that gets printed out */
 	public $replacement_data = '';
+
+    /** @var int whether to filter based on groups. 0: false, 1: whitelist, 2: blacklist */
+    public $filtered = 0;
 
 	/** @var array editor specified array of people groups slugs to show in directory. if empty, show everyone (full directory) */
 	public $editor_people_groups = [];
@@ -193,7 +197,8 @@ class ucf_people_directory_block_attributes {
 			$acf_filter_term_name     = acf_filter_term_name;
 			$acf_filter_subfield_name = 'group';
 		}
-		if ( get_field( 'filtered' ) && have_rows( $acf_filter_term_name ) ) {
+		if ( get_field( acf_filtered_choice ) && have_rows( $acf_filter_term_name ) ) {
+            $this->filtered = get_field(acf_filtered_choice);
 			while ( have_rows( $acf_filter_term_name ) ) {
 				the_row();
 				$group                            = get_sub_field( $acf_filter_subfield_name );
