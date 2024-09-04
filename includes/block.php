@@ -13,9 +13,6 @@ const taxonomy_categories   = ''; // slug for the 'categories' taxonomy
 
 const taxonomy_name                  = 'people_group';
 const acf_filtered_choice            = 'filtered';
-const FILTERED_NONE                  = 0;
-const FILTERED_WHITELIST             = 1;
-const FILTERED_BLACKLIST             = 2;
 const acf_filter_term_name           = 'specific_terms';
 const acf_filter_term_name_main_site = 'specific_terms_main_site';
 const GET_param_group                = 'group_search'; // group or category person is in
@@ -115,7 +112,9 @@ function replacement( $attrs = null ) {
     $profiles_html = "";
 	$wp_query           = null;
 	$wp_query_max_pages = null;
+
 	if ( $obj_block_attributes->show_contacts ) { // user has searched or selected a group, or the editor is showing contacts on initial/unfiltered view. show the contacts.
+
 		$transient_data_compressed = get_transient( $obj_block_attributes->transient_name_cards );
 		if ( $transient_data_compressed ) {
 			$transient_data        = gzuncompress( $transient_data_compressed );
@@ -303,9 +302,32 @@ function query_profiles(ucf_people_directory_block_attributes $block_attributes 
 	}
 
 	// if any group specified, filter to those groups. otherwise, show all.
-	$people_groups = ( $block_attributes->people_group_slug ? $block_attributes->people_group_slug : $block_attributes->editor_people_groups );
-	if ( $people_groups ) {
-        if ($block_attributes->filtered == FILTERED_WHITELIST) {
+    if ($block_attributes->people_group_slug) {
+        // user has filtered to a specific allowed people group slug
+        $people_groups = $block_attributes->people_group_slug;
+        $people_groups_is_user_selected = true;
+    } else {
+        // user has not filtered to a people group. use editor-defined default groups, if editor has set that.
+        $people_groups = $block_attributes->editor_people_groups;
+        $people_groups_is_user_selected = false;
+    }
+//	$people_groups = ( $block_attributes->people_group_slug ? $block_attributes->people_group_slug : $block_attributes->editor_people_groups );
+//    var_dump($block_attributes);
+//    var_dump($block_attributes->people_group_slug); // @TODO this is null for some reason, when using group search parameter. this seems to be broken with the new blacklist. check logic.
+//    var_dump($block_attributes->editor_people_groups);
+//    var_dump($block_attributes->filtered);
+
+//    { // this actually gets the correct category the user searched for. @TODO use this somehow.
+//        $current_category_slug = ucfirst(get_query_var(GET_param_group));
+//        $current_category_wp_obj = "";
+//        if ($current_category_slug) {
+//            $current_category_wp_obj = get_term_by('slug', $current_category_slug, taxonomy_name);
+//        }
+////        var_dump($current_category_wp_obj);
+//    }
+
+    if ( $people_groups ) {
+        if ($people_groups_is_user_selected) {
             $query_args['tax_query'] = array(
                 array(
                     'taxonomy' => taxonomy_name,
@@ -315,16 +337,42 @@ function query_profiles(ucf_people_directory_block_attributes $block_attributes 
                     'operator' => 'IN'
                 )
             );
-        } elseif ($block_attributes->filtered == FILTERED_BLACKLIST) {
-            $query_args['tax_query'] = array(
-                array(
+            if ($block_attributes->editor_people_groups && $block_attributes->filtered == \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_BLACKLIST){
+                // if the blacklist is active, and the user has specified a category, we still need to filter out any profiles from that category that are also
+                // in the blacklist. ex if Enterprise is selected by the user, and Dean is blacklisted, we need to still use the blacklist to remove
+                // the Dean profiles from the results.
+                $query_args['tax_query']['relation'] = "AND";
+                $query_args['tax_query'][] = array(
                     'taxonomy' => taxonomy_name,
                     'field' => 'slug',
-                    'terms' => $people_groups,
-                    'include_children' => true,
+                    'terms' => $block_attributes->editor_people_groups,
+                    'include_children' => false,
                     'operator' => 'NOT IN'
-                )
-            );
+                );
+            }
+        } else {
+            if ($block_attributes->filtered == \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_WHITELIST) {
+                $query_args['tax_query'] = array(
+                    array(
+                        'taxonomy' => taxonomy_name,
+                        'field' => 'slug',
+                        'terms' => $people_groups,
+                        'include_children' => true,
+                        'operator' => 'IN'
+                    )
+                );
+            } elseif ($block_attributes->filtered == \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_BLACKLIST) {
+                $query_args['tax_query'] = array(
+                    array(
+                        'taxonomy' => taxonomy_name,
+                        'field' => 'slug',
+                        'terms' => $people_groups,
+                        'include_children' => false,
+                        'operator' => 'NOT IN'
+                    )
+                );
+            }
+
         }
 	}
 
@@ -438,6 +486,34 @@ function override_sql_order( $orderby ) {
 function profiles_weighted_id_list( $block_attributes ) {
 	// first, find all profiles that have a 'head of department' or similar tag for the currently filtered department.
 	// sort by their weight. smaller numbers first.
+
+    $tax_query_array = array(
+        array(
+            'taxonomy'         => taxonomy_name,
+            'field'            => 'slug',
+            'terms'            => $block_attributes->weighted_category_slug,
+            'include_children' => true,
+            'operator'         => '='
+        )
+    );
+    if ($block_attributes->filtered == \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_BLACKLIST) {
+        // we need to explicitly filter out any people (whether weighted or not) from the list of blacklisted categories.
+        if ($block_attributes->editor_people_groups) {
+            $tax_query_array['relation'] = "AND";
+            $tax_query_array[] = array(
+                $query_args['tax_query'] = array(
+                    array(
+                        'taxonomy' => taxonomy_name,
+                        'field' => 'slug',
+                        'terms' => $block_attributes->editor_people_groups,
+                        'include_children' => true,
+                        'operator' => 'NOT IN'
+                    )
+                )
+            );
+        }
+    }
+
 	$query_args = array(
 		// Don't use paged. We want ALL profiles that have a weight.
 		// Then this list of ids will be given to another wp_query, which will paginate and filter as needed.
@@ -455,15 +531,7 @@ function profiles_weighted_id_list( $block_attributes ) {
 		// only query the user-specified people group.
 		// if the user hasn't specified one, this function shouldn't be called.
 		// we don't weight any profiles on the default view.
-		'tax_query'        => array(
-			array(
-				'taxonomy'         => taxonomy_name,
-				'field'            => 'slug',
-				'terms'            => $block_attributes->weighted_category_slug,
-				'include_children' => true,
-				'operator'         => '='
-			)
-		),
+		'tax_query'        => $tax_query_array,
 
 		// only get profiles with a weight for the user-specified category.
 		// also, check that the custom_sort_order boolean is true. if the editor
@@ -905,10 +973,11 @@ function people_group_list_html( $block_attributes ) {
 		// we have to include empty groups due to the possibility of an external link category which will have a 0 count usage. we have to filter out other empty ones later.
 	);
 	if ( sizeof( $block_attributes->editor_people_groups ) > 0 ) {
-        if ( $block_attributes->filtered == FILTERED_WHITELIST ) {
+        if ( $block_attributes->filtered == \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_WHITELIST ) {
 		    $get_terms_arguments[ 'include' ] = $block_attributes->editor_people_groups_ids; // only include terms specified by the editor
-        } elseif ( $block_attributes->filtered == FILTERED_BLACKLIST ) {
+        } elseif ( $block_attributes->filtered == \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_BLACKLIST ) {
             $get_terms_arguments[ 'exclude' ] = $block_attributes->editor_people_groups_ids; // only include terms specified by the editor
+            $get_terms_arguments[ 'parent' ] = 0; // also only show top level groups - we'll get the children later for formatting
         }
 	} else {
 		// editor wants a global directory (no categories specified)
@@ -943,17 +1012,19 @@ function people_group_list_html( $block_attributes ) {
 	}
 	foreach ( $people_groups_terms_top_level->terms as $top_level_term ) {
 		/* @var $top_level_term  \WP_Term */
+        $get_terms_arguments = array(
+            'taxonomy'   => taxonomy_name,
+            //'hide_empty' => true, // hide empty groups, even if specified by editor
+            'hide_empty' => false,
+            // we have to include empty groups due to the possibility of an external link category which will have a 0 count usage. we have to filter out other empty ones later.
+            'parent'     => $top_level_term->term_id
+            // only show top level children for this group
+        );
+        if ( $block_attributes->filtered == \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_BLACKLIST ) {
+            $get_terms_arguments['exclude'] = $block_attributes->editor_people_groups_ids; // only include terms specified by the editor
+        }
 
-		$people_groups_terms_children = get_terms(
-			array(
-				'taxonomy'   => taxonomy_name,
-				//'hide_empty' => true, // hide empty groups, even if specified by editor
-				'hide_empty' => false,
-				// we have to include empty groups due to the possibility of an external link category which will have a 0 count usage. we have to filter out other empty ones later.
-				'parent'     => $top_level_term->term_id
-				// only show top level children for this group
-			)
-		);
+		$people_groups_terms_children = get_terms($get_terms_arguments);
 
 		// Option 1 - Have all top level groups show with an accordion
 		$html_people_group_list .= term_list_entry_with_children( $top_level_term, $current_page_url, $current_term, $people_groups_terms_children, $block_attributes );

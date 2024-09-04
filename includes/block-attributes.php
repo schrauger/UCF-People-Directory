@@ -24,6 +24,9 @@ class ucf_people_directory_block_attributes {
 
 	const SEARCH_STANDARD    = "standard";
 	const SEARCH_SPECIALIZED = "specialized";
+    const FILTERED_NONE                  = 0;
+    const FILTERED_WHITELIST             = 1;
+    const FILTERED_BLACKLIST             = 2;
 
 	/** @var string type of search bar to show (currently, standard and specialized). defines what fields to search on */
 	public $search_bar_type;
@@ -110,7 +113,6 @@ class ucf_people_directory_block_attributes {
 		$this->initialize_user_specified_people_groups();
 		$this->initialize_weighted_category();
 		$this->search_content = ( get_query_var( GET_param_keyword ) ) ? get_query_var( GET_param_keyword ) : '';
-
 		if (
 			( $this->people_group_slug != '' )
 			|| ( $this->search_content != '' )
@@ -198,7 +200,7 @@ class ucf_people_directory_block_attributes {
 			$acf_filter_subfield_name = 'group';
 		}
 		if ( get_field( acf_filtered_choice ) && have_rows( $acf_filter_term_name ) ) {
-            $this->filtered = get_field(acf_filtered_choice);
+            $this->filtered = (int) get_field(acf_filtered_choice);
 			while ( have_rows( $acf_filter_term_name ) ) {
 				the_row();
 				$group                            = get_sub_field( $acf_filter_subfield_name );
@@ -220,8 +222,8 @@ class ucf_people_directory_block_attributes {
 			$u_people_group            = get_query_var( GET_param_group ); // possibly unsafe value. check against allowed values
 			$matching_people_group_obj = get_term_by( 'slug', $u_people_group, taxonomy_name );
 			if ( $matching_people_group_obj ) {
-				if ( $this->editor_people_groups ) {
-					// we have a user group, and the editor also defined one or more groups. we must now check that the user
+				if ( $this->editor_people_groups && $this->filtered !== self::FILTERED_BLACKLIST ) {
+					// we have a user group, and the editor also defined one or more groups. AND we aren't in blacklist mode. we must now check that the user
 					// specified group is one of the editor specified groups, or that it is a descendent of one of the editor groups.
 
 					foreach ( $this->editor_people_groups as $editor_group_slug ) {
@@ -241,7 +243,7 @@ class ucf_people_directory_block_attributes {
 					}
 
 				} else {
-					// editor did not specify any group. this is a main directory. therefore, allow all user-specified groups (that exist).
+					// editor did not specify any group, or is in blacklist mode. this is a main directory. therefore, allow all user-specified groups (that exist).
 					$this->people_group_slug = $u_people_group;
 				}
 			} else {
@@ -266,7 +268,7 @@ class ucf_people_directory_block_attributes {
 			$this->weighted_category_slug = $this->people_group_slug;
 			$this->weighted_category_id   = get_term_by( 'slug', $this->weighted_category_slug, taxonomy_name )->term_id;
 
-		} elseif ( sizeof( $this->editor_people_groups ) === 1 ) {
+		} elseif ( sizeof( $this->editor_people_groups ) === 1 && ($this->filtered != self::FILTERED_BLACKLIST)) {
 			$this->weighted_category_slug = $this->editor_people_groups[ 0 ];
 			$this->weighted_category_id   = get_term_by( 'slug', $this->weighted_category_slug, taxonomy_name )->term_id;
 		} else {

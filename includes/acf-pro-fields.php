@@ -208,9 +208,9 @@ function create_fields() {
                             'id' => '',
                         ),
                         'choices' => array(
-                            0 => 'Everyone',
-                            1 => 'Whitelist',
-                            2 => 'Blacklist',
+                            \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_NONE => 'Everyone',
+                            \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_WHITELIST => 'Whitelist',
+                            \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_BLACKLIST => 'Blacklist',
                         ),
                         'default_value' => 0,
                         'return_format' => 'value',
@@ -229,7 +229,7 @@ function create_fields() {
 								array(
 									'field'    => acf_key_filtered,
 									'operator' => '==',
-									'value'    => \ucf_people_directory\block\FILTERED_WHITELIST,
+									'value'    => \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_WHITELIST,
 								),
 								array(
 									'field'    => acf_key_switch_to_main_site,
@@ -241,7 +241,7 @@ function create_fields() {
                                 array(
                                     'field'    => acf_key_filtered,
                                     'operator' => '==',
-                                    'value'    => \ucf_people_directory\block\FILTERED_BLACKLIST,
+                                    'value'    => \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_BLACKLIST,
                                 ),
                                 array(
                                     'field'    => acf_key_switch_to_main_site,
@@ -297,7 +297,7 @@ function create_fields() {
 								array(
 									'field'    => acf_key_filtered,
 									'operator' => '==',
-									'value'    => \ucf_people_directory\block\FILTERED_WHITELIST,
+									'value'    => \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_WHITELIST,
 								),
 								array(
 									'field'    => acf_key_switch_to_main_site,
@@ -309,7 +309,7 @@ function create_fields() {
                                 array(
                                     'field'    => acf_key_filtered,
                                     'operator' => '==',
-                                    'value'    => \ucf_people_directory\block\FILTERED_BLACKLIST,
+                                    'value'    => \ucf_people_directory\block_attributes\ucf_people_directory_block_attributes::FILTERED_BLACKLIST,
                                 ),
                                 array(
                                     'field'    => acf_key_switch_to_main_site,
