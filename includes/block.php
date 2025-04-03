@@ -633,8 +633,17 @@ function profiles_id_list( $block_attributes ) {
  */
 function acf_meta_subfield_filter( $where ) {
 
-	$where = str_replace( 'meta_key = \'departments_$_department', "meta_key LIKE 'departments_%_department", $where );
+    $where = str_replace( "meta_key = 'departments_\$_department", "meta_key LIKE 'departments_%_department", $where );
 
+    // 2025-04-01 ACF Pro changed at some point to storing this value as a serialized string in the database.
+    // So we need to check for just the integer value in the string (for entries whose value hasn't been changed since the ACF change)
+    // and secondly for the integer surrounded by quotes and other characters, for newer entries that have been serialized.
+    $where = preg_replace(
+        "/AND mt1\.meta_value = '(\d+)'/",
+        "AND (mt1.meta_value = '\$1' OR mt1.meta_value LIKE '%\"\$1\"%')",
+        $where
+    );
+//	$where = str_replace( "mt1.meta_value = '", "meta_key LIKE 'departments_%_department", $where );
 	//$where = str_replace('meta_key = \'departments_$_weight', "meta_key LIKE 'departments_%_weight", $where);
 	return $where;
 }
