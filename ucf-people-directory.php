@@ -2,7 +2,7 @@
 /*
 Plugin Name: UCF People Directory
 Description: Provides a directory for the UCF people custom post type
-Version: 4.1.1
+Version: 4.1.2
 
 Author: Stephen Schrauger
 Plugin URI: https://github.com/schrauger/UCF-People-Directory
