@@ -740,9 +740,16 @@ function profile_full( $block_attributes ) {
 	$person_title_suffix = get_field( 'person_title_suffix', $current_post_id );
 	$full_name           = $person_title_prefix . get_the_title() . $person_title_suffix;
 	$profile_url         = get_permalink();
-	$image_url           = get_the_post_thumbnail_url( null, 'medium' );
-	if ( ! $image_url ) {
-		$image_url = plugin_dir_url( __FILE__ ) . "default.png"; // default image location
+    // Something is broken on Pantheon wordpress in a strange way. The very first person
+    // in a directory listing on TEST and LIVE, when viewed in a private window, does not
+    // return the thumbnail url. But if you call the thumbnail url a second time, wordpress
+    // returns it without issue.
+    // So we MUST call get_the_post_thumbnail_url twice for the first person in the directory,
+    // or else it may intermittenly have a blank image.
+    $image_url           = get_the_post_thumbnail_url( $current_post_id, 'medium' ); // this is 'false' *sometimes* for the very first person listed
+    $image_url2           = get_the_post_thumbnail_url( $current_post_id, 'medium' ); // calling a second time gets the url without any issue.
+    if ( ! $image_url2 ) {
+		$image_url2 = plugin_dir_url( __FILE__ ) . "default.png"; // default image location
 	}
 	$job_title = get_field( 'person_jobtitle', $current_post_id );
 
@@ -772,7 +779,7 @@ function profile_full( $block_attributes ) {
 	$html_single_profile .= "
         <div class='person person-full {$weight_class}'>
             <div class='photo'>
-                <a href='{$profile_url}' title='{$full_name}' style='background-image: url({$image_url})'>
+                <a href='{$profile_url}' title='{$full_name}' style='background-image: url({$image_url2})'>
                     {$full_name}
                 </a>
             </div>
